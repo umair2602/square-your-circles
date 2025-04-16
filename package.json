@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "npm install --legacy-peer-deps"
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -33,8 +32,8 @@
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.2",
     "next": "15.3.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-google-recaptcha": "^3.1.0",
     "react-hook-form": "^7.55.0",
     "react-hot-toast": "^2.5.2",
@@ -53,13 +52,10 @@
     "@tailwindcss/postcss": "^4",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.6",
     "@types/react-google-recaptcha": "^2.1.9",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "overrides": {
-    "react-is": "^19.0.0"
   }
 }

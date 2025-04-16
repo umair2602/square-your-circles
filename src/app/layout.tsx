@@ -4,7 +4,6 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import ReduxProvider from '@/store/redux-provider';
 import { Toaster } from 'react-hot-toast';
-// import ReCaptchaWrapper from '@/components/common/ReCaptchaWrapper';
 import CarbonWrapper from '@/components/common/CarbonWrapper';
 
 const geistSans = Geist({
@@ -32,12 +31,10 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ReduxProvider>
           <AuthProvider>
-            {/* <ReCaptchaWrapper> */}
-              <CarbonWrapper>
-                <Toaster position="top-right" />
-                {children}
-              </CarbonWrapper>
-            {/* </ReCaptchaWrapper> */}
+            <CarbonWrapper>
+              <Toaster position="top-right" />
+              {children}
+            </CarbonWrapper>
           </AuthProvider>
         </ReduxProvider>
       </body>

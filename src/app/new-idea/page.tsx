@@ -17,7 +17,6 @@ import { useRouter } from 'next/navigation';
 import ReCAPTCHA from 'react-google-recaptcha';
 import toast from 'react-hot-toast';
 import CarbonCount from '@/components/common/CarbonCount';
-// import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { useAuth } from '@/context/AuthContext';
 
 const ideaSchema = Yup.object().shape({
@@ -34,7 +33,6 @@ const page = () => {
   const { title, description, w3wlocation, citedIdeas } = useSelector((state: any) => state.ideaCreation);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  // const { executeRecaptcha } = useGoogleReCaptcha();
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const formik = useFormik({
