@@ -11,4 +11,5 @@ const CarbonDataSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+
 export default mongoose.models.CarbonData || mongoose.model('CarbonData', CarbonDataSchema);
