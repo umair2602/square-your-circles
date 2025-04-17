@@ -61,8 +61,7 @@ export default async function handler(req: SignupRequest, res: NextApiResponse) 
         email,
         permanentUsername,
         passwordHash,
-        isIdVerified: true,
-        validityExpiry,
+        isIdVerified: false,
         hasUsedFreeIdea: false
       });
 

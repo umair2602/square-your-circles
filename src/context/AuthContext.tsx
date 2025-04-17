@@ -13,7 +13,7 @@ interface User {
   permanentUsername: string;
   email: string;
   isIdVerified: boolean;
-  validityExpiry: string;
+  validityExpiry?: string;
   hasUsedFreeIdea: boolean;
 }
 
@@ -66,22 +66,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Memoize login and logout functions to prevent unnecessary re-renders
   const login = useCallback(
     (userData: any, token: string) => {
-      const cleanedUser: User = {
-        _id: userData._id,
-        uuid: userData.uuid,
-        name: userData.name,
-        permanentUsername: userData.permanentUsername,
-        email: userData.email,
-        isIdVerified: userData.isIdVerified,
-        validityExpiry: userData.validityExpiry,
-        hasUsedFreeIdea: userData.hasUsedFreeIdea,
-      };
-
       localStorage.setItem('user_token', token);
-      localStorage.setItem('user', JSON.stringify(cleanedUser));
-      setUser(cleanedUser);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
       setIsAuthenticated(true);
-      dispatch(setUsername(cleanedUser.permanentUsername));
+      dispatch(setUsername(userData.permanentUsername));
       // router.push('/');
     },
     [router]
