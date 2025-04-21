@@ -22,8 +22,8 @@ import { useAuth } from '@/context/AuthContext';
 const ideaSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
   description: Yup.string().required('Description is required'),
-  w3wlocation: Yup.string().required('W3W Location is required'),
-  citedIdeas: Yup.array().of(Yup.string()),
+  // w3wlocation: Yup.string().required('W3W Location is required'),
+  // citedIdeas: Yup.array().of(Yup.string()),
 });
 
 const page = () => {
@@ -39,8 +39,8 @@ const page = () => {
     initialValues: {
       title: title || '',
       description: description || '',
-      w3wlocation: w3wlocation || '',
-      citedIdeas: citedIdeas || [],
+      // w3wlocation: w3wlocation || '',
+      // citedIdeas: citedIdeas || [],
     },
     validationSchema: ideaSchema,
     onSubmit: async (values) => {
@@ -66,14 +66,15 @@ const page = () => {
 
       dispatch(setTitle(values.title));
       dispatch(setDescription(values.description));
-      dispatch(setW3wLocation(values.w3wlocation));
-      dispatch(setCitedIdeas(values.citedIdeas));
-      if (user) {
-        setShowVerificationDialog(true);
-      } else {
-        router.push('/login?from=form');
-      }
-      // router.push('/challenges');
+      // dispatch(setW3wLocation(values.w3wlocation));
+      // dispatch(setCitedIdeas(values.citedIdeas));
+      // if (user) {
+      //   setShowVerificationDialog(true);
+      // } else {
+      //   router.push('/login?from=form');
+      // }
+      router.push('/challenges');
+      
       // recaptchaRef.current?.reset();
       // setCaptchaToken(null);
     },
@@ -119,13 +120,13 @@ const page = () => {
                 <div className="h-4">{formik.touched.description && formik.errors.description && <p className="text-red-500 text-xs">{String(formik.errors.description)}</p>}</div>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="w3wlocation">W3W Location</Label>
                 <Input id="w3wlocation" placeholder="W3W Location" {...formik.getFieldProps('w3wlocation')} className={`${formik.touched.w3wlocation && formik.errors.w3wlocation ? 'border-red-500' : ''}`} />
                 <div className="h-4">{formik.touched.w3wlocation && formik.errors.w3wlocation && <p className="text-red-500 text-xs">{String(formik.errors.w3wlocation)}</p>}</div>
-              </div>
+              </div> */}
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Cite idea</Label>
                 <Select
                   value={formik.values.citedIdeas[0] || 'none'}
@@ -147,7 +148,7 @@ const page = () => {
                     <SelectItem value="idea3">Idea 3</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
           <div className="flex justify-end mt-3.5">

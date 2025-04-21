@@ -16,7 +16,7 @@ import carbonCountReducer from './slices/carbonCountSlice';
 const ideaCreationPersistConfig = {
   key: 'ideaCreation',
   storage,
-  // whitelist: ['username'] // Only persist
+  whitelist: ['username', 'title', 'description'] // Only persist
 };
 
 const rootReducer = combineReducers({

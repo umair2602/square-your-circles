@@ -6,6 +6,7 @@ interface IdeaCreationState {
   description: string;
   w3wlocation: string;
   citedIdeas: string[];
+  score: number;
 }
 
 const initialState: IdeaCreationState = {
@@ -13,7 +14,8 @@ const initialState: IdeaCreationState = {
   title: '',
   description: '',
   w3wlocation: '',
-  citedIdeas: []
+  citedIdeas: [],
+  score: 0,
 };
 
 const ideaCreationSlice = createSlice({
@@ -35,14 +37,18 @@ const ideaCreationSlice = createSlice({
     setCitedIdeas: (state, action: PayloadAction<string[]>) => {
       state.citedIdeas = action.payload;
     },
+    setScore: (state, action: PayloadAction<number>) => {
+      state.score = action.payload;
+    },
     resetForm: (state) => {
       state.title = '';
       state.description = '';
       state.w3wlocation = '';
       state.citedIdeas = [];
-    }
+      state.score = 0;
+    },
   }
 });
 
-export const { setUsername, setTitle, setDescription, setW3wLocation, setCitedIdeas, resetForm } = ideaCreationSlice.actions;
+export const { setUsername, setTitle, setDescription, setW3wLocation, setCitedIdeas, resetForm, setScore } = ideaCreationSlice.actions;
 export default ideaCreationSlice.reducer;
