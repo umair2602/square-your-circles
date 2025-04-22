@@ -3,6 +3,15 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
+import PaymentDialog from '../dialogs/payment-dialog';
+import { useDispatch, useSelector } from 'react-redux';
+import { resetForm } from '@/store/slices/ideaCreationSlice';
 
 type Challenge = {
   id: string;
@@ -11,6 +20,11 @@ type Challenge = {
   options?: { label: string; value: string; score: number }[];
   placeholder?: string;
   buttonText?: string;
+  validation?: {
+    required?: boolean;
+    pattern?: string;
+    errorMessage?: string;
+  };
 };
 
 type Props = {
@@ -20,6 +34,117 @@ type Props = {
 };
 
 export function ChallengesRenderer({ challenge, response, onChange }: Props) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { score, title, description, responses } = useSelector((state: any) => state.ideaCreation);
+  const currentPpm = useSelector((state: any) => state.carbonCount.currentPpm);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+
+  useEffect(() => {
+    if (user?.isIdVerified && challenge.type === 'verify') {
+      onChange('verified');
+    }
+  }, [user, challenge.type]);
+
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token);
+  };
+
+  const verifyYoti = async () => {
+    if (!user) {
+      router.push('/login?from=form');
+      return;
+    }
+
+    if (!captchaToken) {
+      toast.error('Please verify you are human');
+      return;
+    }
+
+    // Proceed with verification
+    onChange('verified');
+    // Reset captcha after use
+    recaptchaRef.current?.reset();
+    setCaptchaToken(null);
+  };
+
+  const handleRegisterScore = async () => {
+    if (!user) {
+      router.push('/login?from=form');
+      return;
+    }
+
+    if (!captchaToken) {
+      toast.error('Please verify you are human');
+      return;
+    }
+
+    // Reset captcha after use
+    recaptchaRef.current?.reset();
+    setCaptchaToken(null);
+
+    // Proceed with registration
+    try {
+      setLoading(true);
+      if (!currentPpm) {
+        toast.error('Please refresh or wait for the ppm value to be displayed');
+        return;
+      }
+
+      const payload = {
+        title: title || 'Idea title',
+        description: description || 'Idea description',
+        w3wLocation: responses.geo_1 ? responses.geo_1 : "",
+        citations: responses.bonus_1 ? [responses.bonus_1] : [],
+        score: Math.max((score ?? 0) - currentPpm, 0),
+      };
+      
+      const token = localStorage.getItem('user_token');
+      if (!token) {
+        toast.error('User not authenticated');
+        return;
+      }
+      const response = await fetch('/api/create-idea', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 403 && data.needsPayment) {
+        setShowPaymentDialog(true);
+        return;
+      }
+
+      if (!response.ok) {
+        toast.error(data?.message || 'Idea creation failed');
+        return;
+      }
+
+      router.push('/');
+      
+      toast.success(data?.message || 'Idea creation successful');
+      dispatch(resetForm());
+    } catch (error: any) {
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayment = () => {
+    setShowPaymentDialog(false);
+    router.push('/payment');
+  };
+
   return (
     <div className="">
       <Label className="block text-md font-medium mb-3">{challenge.challenge}</Label>
@@ -38,9 +163,16 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       {challenge.type === 'text' && <Input placeholder={challenge.placeholder || 'Type here...'} value={response} onChange={(e) => onChange(e.target.value)} />}
 
       {challenge.type === 'verify' && (
-        <Button onClick={() => onChange('verified')} className="w-full">
-          Verify with Yoti
-        </Button>
+        <div className="space-y-4">
+          {!user?.isIdVerified && (
+            <div className="flex justify-center">
+              <ReCAPTCHA ref={recaptchaRef} sitekey={`${process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}`} onChange={handleCaptchaChange} onExpired={() => setCaptchaToken(null)} />
+            </div>
+          )}
+          <Button onClick={verifyYoti} className="w-full" disabled={user?.isIdVerified}>
+            {user?.isIdVerified ? 'Already Verified' : 'Verify with Yoti'}
+          </Button>
+        </div>
       )}
 
       {challenge.type === 'declaration' && (
@@ -50,9 +182,15 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       )}
 
       {challenge.type === 'register' && (
-        <Button onClick={() => onChange('registered')} className="w-full">
-          {challenge.buttonText || 'Register Score'}
-        </Button>
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <ReCAPTCHA ref={recaptchaRef} sitekey={`${process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}`} onChange={handleCaptchaChange} onExpired={() => setCaptchaToken(null)} />
+          </div>
+          <Button onClick={handleRegisterScore} disabled={loading} className="w-full">
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {loading ? 'Registering...' : 'Register Score'}
+          </Button>
+        </div>
       )}
 
       {challenge.type === 'checkbox' && (
@@ -61,6 +199,12 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
           <Label htmlFor={challenge.id}>I acknowledge and accept</Label>
         </div>
       )}
+
+      <PaymentDialog 
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        onPay={handlePayment}
+      />
     </div>
   );
 }

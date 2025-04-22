@@ -4,6 +4,7 @@ import storage from 'redux-persist/lib/storage';
 
 import ideaCreationReducer from './slices/ideaCreationSlice';
 import carbonCountReducer from './slices/carbonCountSlice';
+import ideasReducer from './slices/ideasSlice';
 // import themeReducer from './slices/themeSlice';
 // import tempReducer from './slices/tempSlice';
 
@@ -16,11 +17,16 @@ import carbonCountReducer from './slices/carbonCountSlice';
 const ideaCreationPersistConfig = {
   key: 'ideaCreation',
   storage,
-  whitelist: ['username', 'title', 'description'] // Only persist
+  // whitelist: ['username'] // Only persist
+};
+const ideasPersistConfig = {
+  key: 'ideas',
+  storage,
 };
 
 const rootReducer = combineReducers({
   ideaCreation: persistReducer(ideaCreationPersistConfig, ideaCreationReducer),
+  ideas: persistReducer(ideasPersistConfig, ideasReducer),
   carbonCount: carbonCountReducer,
   // theme: persistReducer(themePersistConfig, themeReducer), // Persisted
   // temp: tempReducer // Not persisted

@@ -64,7 +64,7 @@ export default function LoginPage() {
         }
 
         login(data.user, data.token);
-        router.push(from ? `/new-idea` : '/');
+        router.push(from ? `/challenges` : '/');
 
         toast.success(data?.message || 'Login successful');
       } catch (error: any) {

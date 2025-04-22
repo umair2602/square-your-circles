@@ -7,6 +7,8 @@ interface IdeaCreationState {
   w3wlocation: string;
   citedIdeas: string[];
   score: number;
+  responses: Record<string, string>;
+  currentStep: number;
 }
 
 const initialState: IdeaCreationState = {
@@ -16,6 +18,8 @@ const initialState: IdeaCreationState = {
   w3wlocation: '',
   citedIdeas: [],
   score: 0,
+  responses: {},
+  currentStep: 0,
 };
 
 const ideaCreationSlice = createSlice({
@@ -40,15 +44,23 @@ const ideaCreationSlice = createSlice({
     setScore: (state, action: PayloadAction<number>) => {
       state.score = action.payload;
     },
+    setResponses: (state, action: PayloadAction<Record<string, string>>) => {
+      state.responses = { ...state.responses, ...action.payload };
+    },
+    setCurrentStep: (state, action) => {
+      state.currentStep = action.payload;
+    },
     resetForm: (state) => {
       state.title = '';
       state.description = '';
       state.w3wlocation = '';
       state.citedIdeas = [];
       state.score = 0;
+      state.responses = {};
+      state.currentStep = 0;
     },
   }
 });
 
-export const { setUsername, setTitle, setDescription, setW3wLocation, setCitedIdeas, resetForm, setScore } = ideaCreationSlice.actions;
+export const { setUsername, setTitle, setDescription, setW3wLocation, setCitedIdeas, resetForm, setScore, setResponses, setCurrentStep } = ideaCreationSlice.actions;
 export default ideaCreationSlice.reducer;
