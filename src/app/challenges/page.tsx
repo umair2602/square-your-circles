@@ -165,14 +165,10 @@ const page = () => {
   const { score, title, description, responses, currentStep } = useSelector((state: any) => state.ideaCreation);
 
   useEffect(() => {
-    console.log('Responses:', responses);
-  }, [responses]);
-
-  // useEffect(() => {
-  //   if (!title || !description) {
-  //     router.push('/new-idea');
-  //   }
-  // }, [title, description]);
+    if (!title || !description) {
+      router.push('/new-idea');
+    }
+  }, [title, description]);
 
   const category = steps[currentStep].label as keyof typeof categoryChallenges;
   const challenges = categoryChallenges[category] as Challenge[];
