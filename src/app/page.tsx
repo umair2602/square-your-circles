@@ -5,104 +5,22 @@ import { ColumnDef, ColumnFiltersState, SortingState, flexRender, getCoreRowMode
 import { ArrowUpDown, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import UsernameMenu from '@/components/common/username-menu';
 import { useAuth } from '@/context/AuthContext';
 import CarbonCount from '@/components/common/CarbonCount';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '@/store';
+import { setIdeas } from '@/store/slices/ideasSlice';
+import toast from 'react-hot-toast';
 
 type PlayerIdea = {
+  _id: string;
   username: string;
   ideaTitle: string;
   carbonCount: number;
   w3w: string;
 };
-
-const data: PlayerIdea[] = [
-  {
-    username: 'eco_warrior',
-    ideaTitle: 'Urban Tree Plantation',
-    carbonCount: 123,
-    w3w: 'tree.plant.green',
-  },
-  {
-    username: 'climate_hero',
-    ideaTitle: 'Solar Panel Sharing',
-    carbonCount: 98,
-    w3w: 'sun.power.share',
-  },
-  {
-    username: 'nature_lover',
-    ideaTitle: 'Community Composting',
-    carbonCount: 76,
-    w3w: 'compost.bin.local',
-  },
-  {
-    username: 'climate_hero',
-    ideaTitle: 'Solar Panel Sharing',
-    carbonCount: 98,
-    w3w: 'sun.power.share',
-  },
-  {
-    username: 'nature_lover',
-    ideaTitle: 'Community Composting',
-    carbonCount: 76,
-    w3w: 'compost.bin.local',
-  },
-  {
-    username: 'climate_hero',
-    ideaTitle: 'Solar Panel Sharing',
-    carbonCount: 98,
-    w3w: 'sun.power.share',
-  },
-  {
-    username: 'nature_lover',
-    ideaTitle: 'Community Composting',
-    carbonCount: 76,
-    w3w: 'compost.bin.local',
-  },
-  {
-    username: 'climate_hero',
-    ideaTitle: 'Solar Panel Sharing',
-    carbonCount: 98,
-    w3w: 'sun.power.share',
-  },
-  {
-    username: 'nature_lover',
-    ideaTitle: 'Community Composting',
-    carbonCount: 76,
-    w3w: 'compost.bin.local',
-  },
-  {
-    username: 'climate_hero',
-    ideaTitle: 'Solar Panel Sharing',
-    carbonCount: 98,
-    w3w: 'sun.power.share',
-  },
-  {
-    username: 'nature_lover',
-    ideaTitle: 'Community Composting',
-    carbonCount: 76,
-    w3w: 'compost.bin.local',
-  },
-  {
-    username: 'climate_hero',
-    ideaTitle: 'Solar Panel Sharing',
-    carbonCount: 98,
-    w3w: 'sun.power.share',
-  },
-  {
-    username: 'nature_lover',
-    ideaTitle: 'Community Composting',
-    carbonCount: 76,
-    w3w: 'compost.bin.local',
-  },
-  {
-    username: 'climate_hero',
-    ideaTitle: 'Solar Panel Sharing',
-    carbonCount: 98,
-    w3w: 'sun.power.share',
-  },
-];
 
 const columns: ColumnDef<PlayerIdea>[] = [
   {
@@ -156,6 +74,7 @@ const columns: ColumnDef<PlayerIdea>[] = [
 ];
 
 function PlayerIdeasTable() {
+  const ideas = useSelector((state: RootState) => state.ideas.ideas);
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -166,7 +85,7 @@ function PlayerIdeasTable() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
-    data,
+    data: ideas,
     columns,
     state: {
       sorting,
@@ -247,6 +166,40 @@ function PlayerIdeasTable() {
 export default function Home() {
   const { user } = useAuth();
   const router = useRouter();
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchIdeas = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/ideas", {
+          method: "GET",
+        });
+
+        const ideas = await response.json();
+
+        if (!response.ok) {
+          toast.error(ideas?.message || "Failed to fetch ideas");
+          return;
+        }
+
+        dispatch(setIdeas(ideas));
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(error.message);
+        } else {
+          console.error("An unexpected error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIdeas();
+
+    return () => {};
+  }, []);
 
   const handleClick = () => {
     router.push('/new-idea');
@@ -254,7 +207,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between mb-4 gap-2 flex-wrap">
         {user ? (
           <UsernameMenu />
         ) : (
@@ -263,9 +216,9 @@ export default function Home() {
           </Button>
         )}
 
-        <div className='flex'>
+        <div className='w-full sm:w-auto flex justify-between gap-2'>
           <CarbonCount />
-          <Button onClick={handleClick} className="bg-emerald-600 hover:bg-emerald-800 text-white ml-3">
+          <Button onClick={handleClick} className="bg-emerald-600 hover:bg-emerald-800 text-white">
             New Idea
           </Button>
         </div>

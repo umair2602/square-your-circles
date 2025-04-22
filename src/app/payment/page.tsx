@@ -17,7 +17,7 @@ export default function PaymentPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount: 10.00,
+        amount: 5.00,
         currency: 'gbp',
       }),
     })
@@ -41,7 +41,7 @@ export default function PaymentPage() {
           <CardTitle className="text-2xl font-bold text-gray-800">Complete your payment</CardTitle>
           <CardDescription className="flex items-center justify-between">
             <span className="text-lg text-gray-600">Amount to pay:</span>
-            <span className="text-lg font-semibold text-gray-800">£ 10</span>
+            <span className="text-lg font-semibold text-gray-800">£ 5</span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

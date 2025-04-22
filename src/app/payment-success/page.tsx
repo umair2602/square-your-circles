@@ -109,7 +109,7 @@ const page = () => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <button onClick={() => router.push('/new-idea')} className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
+          <button onClick={() => router.push('/challenges')} className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
             Back to idea creation
           </button>
         </CardFooter>

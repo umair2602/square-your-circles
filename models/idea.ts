@@ -19,20 +19,9 @@ const ideaSchema = new mongoose.Schema({
 
   w3wLocation: {
     type: String,
-    required: true
+    required: false,
+    default: ""
   },
-
-  challengeResponses: [{
-    challengeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Challenge",
-      required: true
-    },
-    answer: {
-      type: String,
-      required: true
-    }
-  }],
 
   citations: {
     type: [{

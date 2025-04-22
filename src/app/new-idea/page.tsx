@@ -2,7 +2,7 @@
 import React from 'react';
 import { useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setTitle, setDescription, setW3wLocation, setCitedIdeas } from '@/store/slices/ideaCreationSlice';
+import { setTitle, setDescription, setW3wLocation, setCitedIdeas, resetForm } from '@/store/slices/ideaCreationSlice';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,12 +18,13 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import toast from 'react-hot-toast';
 import CarbonCount from '@/components/common/CarbonCount';
 import { useAuth } from '@/context/AuthContext';
+import { FaRedo } from 'react-icons/fa';
 
 const ideaSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
   description: Yup.string().required('Description is required'),
-  w3wlocation: Yup.string().required('W3W Location is required'),
-  citedIdeas: Yup.array().of(Yup.string()),
+  // w3wlocation: Yup.string().required('W3W Location is required'),
+  // citedIdeas: Yup.array().of(Yup.string()),
 });
 
 const page = () => {
@@ -36,11 +37,12 @@ const page = () => {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       title: title || '',
       description: description || '',
-      w3wlocation: w3wlocation || '',
-      citedIdeas: citedIdeas || [],
+      // w3wlocation: w3wlocation || '',
+      // citedIdeas: citedIdeas || [],
     },
     validationSchema: ideaSchema,
     onSubmit: async (values) => {
@@ -66,14 +68,15 @@ const page = () => {
 
       dispatch(setTitle(values.title));
       dispatch(setDescription(values.description));
-      dispatch(setW3wLocation(values.w3wlocation));
-      dispatch(setCitedIdeas(values.citedIdeas));
-      if (user) {
-        setShowVerificationDialog(true);
-      } else {
-        router.push('/login?from=form');
-      }
-      // router.push('/challenges');
+      // dispatch(setW3wLocation(values.w3wlocation));
+      // dispatch(setCitedIdeas(values.citedIdeas));
+      // if (user) {
+      //   setShowVerificationDialog(true);
+      // } else {
+      //   router.push('/login?from=form');
+      // }
+      router.push('/challenges');
+
       // recaptchaRef.current?.reset();
       // setCaptchaToken(null);
     },
@@ -95,7 +98,7 @@ const page = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-2 flex-wrap">
         <UsernameMenu />
         <CarbonCount />
       </div>
@@ -103,7 +106,24 @@ const page = () => {
         <form onSubmit={formik.handleSubmit} className="w-full max-w-lg">
           <Card className="w-full">
             <CardHeader>
-              <CardTitle className="text-xl mb-2">Create New Idea</CardTitle>
+              <CardTitle className="text-xl mb-2 flex items-center gap-2 justify-between">
+                <div>Create New Idea</div>
+                <Button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dispatch(resetForm());
+                    formik.resetForm({
+                      values: {
+                        title: '',
+                        description: '',
+                      },
+                    });
+                  }}
+                >
+                  <FaRedo />
+                </Button>
+              </CardTitle>
               <CardDescription>Fill in the details of your new idea</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -119,13 +139,13 @@ const page = () => {
                 <div className="h-4">{formik.touched.description && formik.errors.description && <p className="text-red-500 text-xs">{String(formik.errors.description)}</p>}</div>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="w3wlocation">W3W Location</Label>
                 <Input id="w3wlocation" placeholder="W3W Location" {...formik.getFieldProps('w3wlocation')} className={`${formik.touched.w3wlocation && formik.errors.w3wlocation ? 'border-red-500' : ''}`} />
                 <div className="h-4">{formik.touched.w3wlocation && formik.errors.w3wlocation && <p className="text-red-500 text-xs">{String(formik.errors.w3wlocation)}</p>}</div>
-              </div>
+              </div> */}
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Cite idea</Label>
                 <Select
                   value={formik.values.citedIdeas[0] || 'none'}
@@ -147,7 +167,7 @@ const page = () => {
                     <SelectItem value="idea3">Idea 3</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
           <div className="flex justify-end mt-3.5">
