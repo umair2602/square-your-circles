@@ -100,7 +100,9 @@ const page = () => {
     <div className="min-h-screen flex flex-col bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center gap-2 flex-wrap">
         <UsernameMenu />
-        <CarbonCount />
+        <div>
+          <CarbonCount />
+        </div>
       </div>
       <div className="flex grow items-center justify-center">
         <form onSubmit={formik.handleSubmit} className="w-full max-w-lg">

@@ -260,11 +260,14 @@ const page = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <SidebarTrigger className="md:hidden" />
             <UsernameMenu />
-            <CarbonCount />
+            <div className="flex items-center justify-between gap-1 px-2.5 py-1 bg-white rounded-md shadow-md border">
+              <span className="text-gray-600 font-medium">Score: </span>
+              <span className="text-green-600 font-medium">{`${score}`}</span>
+            </div>
           </div>
-          <div className="flex items-center justify-between gap-1 px-2.5 py-1 bg-white rounded-md shadow-md border">
-            <span className="text-gray-600 font-medium">Score: </span>
-            <span className="text-green-600 font-medium">{`${score}`}</span>
+          
+          <div>
+            <CarbonCount />
           </div>
         </div>
         <div className="mx-auto w-full">

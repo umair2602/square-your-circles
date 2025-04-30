@@ -215,13 +215,11 @@ export default function Home() {
             Login
           </Button>
         )}
-
-        <div className='w-full sm:w-auto flex justify-between gap-2'>
-          <CarbonCount />
-          <Button onClick={handleClick} className="bg-emerald-600 hover:bg-emerald-800 text-white">
-            New Idea
-          </Button>
-        </div>
+ 
+        <CarbonCount className='text-lg px-3 py-2'/>
+        <Button onClick={handleClick} className="bg-emerald-600 hover:bg-emerald-800 text-white">
+          New Idea
+        </Button>
       </div>
       <PlayerIdeasTable />
     </div>
