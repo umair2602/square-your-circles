@@ -261,8 +261,8 @@ const page = () => {
             <SidebarTrigger className="md:hidden" />
             <UsernameMenu />
             <div className="flex items-center justify-between gap-1 px-2.5 py-1 bg-white rounded-md shadow-md border">
-              <span className="text-gray-600 font-medium">Score: </span>
-              <span className="text-green-600 font-medium">{`${score}`}</span>
+              <span className="text-black font-medium">Score: </span>
+              <span className="text-gray-500 font-medium">{`${score}`}</span>
             </div>
           </div>
           

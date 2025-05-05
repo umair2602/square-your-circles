@@ -79,8 +79,8 @@ function PlayerIdeasTable() {
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: 'carbonCount',
-      desc: false
-    }
+      desc: false,
+    },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
@@ -168,19 +168,20 @@ export default function Home() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const currentPpm = useSelector((state: any) => state.carbonCount.currentPpm);
 
   useEffect(() => {
     const fetchIdeas = async () => {
       setLoading(true);
       try {
-        const response = await fetch("/api/ideas", {
-          method: "GET",
+        const response = await fetch('/api/ideas', {
+          method: 'GET',
         });
 
         const ideas = await response.json();
 
         if (!response.ok) {
-          toast.error(ideas?.message || "Failed to fetch ideas");
+          toast.error(ideas?.message || 'Failed to fetch ideas');
           return;
         }
 
@@ -189,7 +190,7 @@ export default function Home() {
         if (error instanceof Error) {
           console.error(error.message);
         } else {
-          console.error("An unexpected error occurred");
+          console.error('An unexpected error occurred');
         }
       } finally {
         setLoading(false);
@@ -206,22 +207,49 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between mb-4 gap-2 flex-wrap">
-        {user ? (
-          <UsernameMenu />
-        ) : (
-          <Button onClick={() => router.push('/login')} className="bg-gray-700 hover:bg-gray-900 text-white">
-            Login
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      {/* Header with auth and new idea button - Fixed at top */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 py-4">
+          {user ? (
+            <UsernameMenu />
+          ) : (
+            <Button onClick={() => router.push('/login')} className="text-white">
+              Login
+            </Button>
+          )}
+          <Button onClick={handleClick} className="bg-gray-500 hover:bg-gray-900 text-white">
+            New Idea
           </Button>
-        )}
- 
-        <CarbonCount className='text-lg px-3 py-2'/>
-        <Button onClick={handleClick} className="bg-emerald-600 hover:bg-emerald-800 text-white">
-          New Idea
-        </Button>
+        </div>
       </div>
-      <PlayerIdeasTable />
+
+      {/* Carbon Clock Section - Full Viewport Height */}
+      <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+        <div className="text-center max-w-4xl mx-auto">
+          <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-6 tracking-tight [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">Carbon Clock</h1>
+          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">Tracking global carbon dioxide levels in real-time</p>
+          <div className="inline-block">
+            <div className="text-7xl sm:text-9xl font-bold text-gray-500 tracking-tight [text-shadow:_0_4px_20px_rgba(0,0,0,0.15)]">{currentPpm.toFixed(8)}</div>
+            <div className="text-3xl text-gray-600 mt-4 font-medium [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">parts per million</div>
+          </div>
+        </div>
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 animate-bounce">
+          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+      </section>
+
+      {/* Leaderboard Section */}
+      <section className="min-h-screen flex items-center bg-white px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="bg-white rounded-xl shadow-xl p-6">
+            <PlayerIdeasTable />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
