@@ -183,7 +183,7 @@ const page = () => {
             />
             <Button
               type="submit"
-              className="bg-blue-700 hover:bg-blue-900 ml-4"
+              className="bg-gray-500 hover:bg-gray-900 text-white ml-4"
               // disabled={formik.isSubmitting}
             >
               Next

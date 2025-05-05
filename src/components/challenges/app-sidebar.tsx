@@ -38,7 +38,7 @@ export function AppSidebar({ steps, currentStep, onStepClick }: SidebarProps) {
                   <SidebarMenuButton
                     onClick={() => onStepClick(index)}
                     className={`w-full flex items-center p-3 rounded-lg transition-colors
-                      ${currentStep === index ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+                      ${currentStep === index ? 'bg-gray-200 text-black' : 'hover:bg-gray-100'}`}
                   >
                     {getCategoryIcon(step.label)}
                     <span>{step.label}</span>
