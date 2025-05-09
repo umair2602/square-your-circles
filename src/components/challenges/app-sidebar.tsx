@@ -1,4 +1,4 @@
-import { Cpu, Users, Globe, Gift, Clock } from 'lucide-react';
+import { Clock, Cpu, Gift, Globe, Users } from 'lucide-react';
 
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
@@ -10,15 +10,15 @@ type SidebarProps = {
 
 const getCategoryIcon = (label: string) => {
   switch (label) {
-    case 'Technology':
+    case 'Nakedness':
       return <Cpu className="w-5 h-5 mr-2" />;
-    case 'Customer':
+    case 'Designer Re:designer':
       return <Users className="w-5 h-5 mr-2" />;
-    case 'Geography':
+    case 'Home':
       return <Globe className="w-5 h-5 mr-2" />;
     case 'Bonus':
       return <Gift className="w-5 h-5 mr-2" />;
-    case 'Time':
+    case 'Now':
       return <Clock className="w-5 h-5 mr-2" />;
     default:
       return null;
