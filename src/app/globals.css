@@ -120,7 +120,46 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Square Your Circles Mark Styles */
+.syc-mark-bg {
+  position: relative;
+}
+
+.syc-mark-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('/squareyourcircles.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.1;
+}
+
+.syc-mark-corner {
+  position: relative;
+}
+
+.syc-mark-corner::after {
+  content: '';
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 5rem;
+  height: 5rem;
+  z-index: 10;
+  pointer-events: none;
+  background-image: url('/squareyourcircles.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.7;
 }

@@ -1,16 +1,16 @@
 'use client';
-import CarbonCount from '@/components/common/CarbonCount';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ChallengesRenderer } from '@/components/challenges/ChallengesRenderer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSelector, useDispatch } from 'react-redux';
-import { setScore, setResponses, setCurrentStep } from '@/store/slices/ideaCreationSlice';
-import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import UsernameMenu from '@/components/common/username-menu';
-import { useRouter } from 'next/navigation';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/challenges/app-sidebar';
+import { ChallengesRenderer } from '@/components/challenges/ChallengesRenderer';
+import { StickyFooter } from '@/components/challenges/sticky-footer';
+import { StickyHeader } from '@/components/challenges/sticky-header';
+import UsernameMenu from '@/components/common/username-menu';
+import { Card, CardContent } from '@/components/ui/card';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { setCurrentStep, setResponses, setScore } from '@/store/slices/ideaCreationSlice';
+import { setIdeas } from '@/store/slices/ideasSlice';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 type Option = {
   label: string;
@@ -32,7 +32,27 @@ type Challenge = {
   };
 };
 
-const steps = [{ label: 'Technology' }, { label: 'Customer' }, { label: 'Geography' }, { label: 'Bonus' }, { label: 'Time' }];
+// Define the creative label type for type safety
+type CreativeLabel = 'Nakedness' | 'Designer Re:designer' | 'Home' | 'Bonus' | 'Now';
+type OriginalCategory = 'Technology' | 'Customer' | 'Geography' | 'Bonus' | 'Time';
+
+// Updated step labels with more creative names
+const steps = [
+  { label: 'Nakedness' as CreativeLabel }, // Changed from Technology
+  { label: 'Designer Re:designer' as CreativeLabel }, // Changed from Customer
+  { label: 'Home' as CreativeLabel }, // Changed from Geography
+  { label: 'Bonus' as CreativeLabel }, // Kept the same
+  { label: 'Now' as CreativeLabel } // Changed from Time
+];
+
+// Map the new creative names to the original categories for data handling
+const creativeToOriginalMap: Record<CreativeLabel, OriginalCategory> = {
+  'Nakedness': 'Technology',
+  'Designer Re:designer': 'Customer',
+  'Home': 'Geography',
+  'Bonus': 'Bonus',
+  'Now': 'Time'
+};
 
 const categoryChallenges = {
   Technology: [
@@ -164,14 +184,39 @@ const page = () => {
   const router = useRouter();
   const { score, title, description, responses, currentStep } = useSelector((state: any) => state.ideaCreation);
 
-  useEffect(() => {
-    if (!title || !description) {
-      router.push('/new-idea');
-    }
-  }, [title, description]);
+  // Choose which variant to use - 'Position' or 'Score'
+  const positionVariant = 'Position';
 
-  const category = steps[currentStep].label as keyof typeof categoryChallenges;
-  const challenges = categoryChallenges[category] as Challenge[];
+  // Fetch ideas data for leaderboard position calculation
+  useEffect(() => {
+    const fetchIdeas = async () => {
+      try {
+        const response = await fetch('/api/ideas', {
+          method: 'GET',
+        });
+
+        const ideas = await response.json();
+        dispatch(setIdeas(ideas));
+      } catch (error) {
+        console.error('Error fetching ideas:', error);
+      }
+    };
+
+    fetchIdeas();
+  }, [dispatch]);
+
+  // useEffect(() => {
+  //   if (!title || !description) {
+  //     router.push('/new-idea');
+  //   }
+  // }, [title, description, router]);
+
+  // Get the creative label for current step
+  const creativeLabel = steps[currentStep].label as CreativeLabel;
+
+  // Map the creative label back to the original category for data
+  const originalCategory = creativeToOriginalMap[creativeLabel];
+  const currentChallenges = categoryChallenges[originalCategory] as Challenge[];
 
   const updateResponses = (id: string, value: string) => {
     // Get the previous responses for this challenge
@@ -182,7 +227,20 @@ const page = () => {
 
     // Handle scoring for Technology and Customer MCQs
     if (id.startsWith('tech_') || id.startsWith('cust_')) {
-      const challenge = challenges.find((c) => c.id === id);
+      const challenge = currentChallenges.find((c) => c.id === id);
+
+      // If value is empty, it means the user deselected the option
+      if (value === '') {
+        // Find the previously selected option to subtract its score
+        const previousOption = challenge?.options?.find((opt) => opt.value === previousValue);
+        const previousPoints = previousOption?.score || 0;
+
+        // Subtract the previous points
+        dispatch(setScore(score - previousPoints));
+        return;
+      }
+
+      // Handle normal selection/change
       const selectedOption = challenge?.options?.find((opt) => opt.value === value);
       const newPoints = selectedOption?.score || 0;
       const previousOption = challenge?.options?.find((opt) => opt.value === previousValue);
@@ -221,7 +279,7 @@ const page = () => {
   };
 
   const handleTimeSubmission = () => {
-    if (category === 'Time' && responses['time_1'] === 'registered') {
+    if (originalCategory === 'Time' && responses['time_1'] === 'registered') {
       // Final submission logic here
       console.log('Final Score:', score);
       // You can add API call here to save the score
@@ -230,14 +288,30 @@ const page = () => {
 
   const next = () => {
     // Check scores before moving to next step
-    if (category === 'Geography') {
+    if (originalCategory === 'Geography') {
       handleGeographyScore();
-    } else if (category === 'Bonus') {
+    } else if (originalCategory === 'Bonus') {
       handleBonusScore();
-    } else if (category === 'Time') {
+    } else if (originalCategory === 'Time') {
       handleTimeSubmission();
     }
     dispatch(setCurrentStep(Math.min(currentStep + 1, steps.length - 1)));
+  };
+
+  const handleStepChange = (newStep: number) => {
+    // Get current category before changing step
+    const currentCategory = steps[currentStep].label as keyof typeof categoryChallenges;
+    
+    // Run appropriate score calculations based on current category
+    if (currentCategory === 'Geography') {
+      handleGeographyScore();
+    } else if (currentCategory === 'Bonus') {
+      handleBonusScore();
+    } else if (currentCategory === 'Time') {
+      handleTimeSubmission();
+    }
+    
+    dispatch(setCurrentStep(newStep));
   };
 
   const prev = () => {
@@ -249,74 +323,64 @@ const page = () => {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar 
-        steps={steps} 
-        currentStep={currentStep} 
-        onStepClick={(index) => dispatch(setCurrentStep(index))} 
-      />
-      <div className="min-h-screen w-full flex flex-col bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-3 shrink-0 flex-wrap gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <SidebarTrigger className="md:hidden" />
-            <UsernameMenu />
-            <div className="flex items-center justify-between gap-1 px-2.5 py-1 bg-white rounded-md shadow-md border">
-              <span className="text-black font-medium">Score: </span>
-              <span className="text-gray-500 font-medium">{`${score}`}</span>
-            </div>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <StickyHeader />
+      <SidebarProvider>
+        <div className="flex flex-1 overflow-hidden">
+          <div className="hidden sm:block w-64 shrink-0">
+            <AppSidebar
+              steps={steps}
+              currentStep={currentStep}
+              onStepClick={handleStepChange}
+            />
           </div>
-          
-          <div>
-            <CarbonCount />
-          </div>
-        </div>
-        <div className="mx-auto w-full">
-          <div className="mb-5 flex flex-col items-center justify-center font-bold text-xl">
-            <div>Complete the challenges to earn points!</div>
-            <div className="md:hidden">{steps[currentStep].label}</div>
-          </div>
+          <div className="flex-1 bg-white flex flex-col h-screen overflow-auto">
+            <header className="flex justify-between px-6 py-4 border-b sm:hidden">
+              <h1 className="text-xl font-bold">Square Your Circles</h1>
+              <SidebarTrigger className="sm:hidden" />
+            </header>
 
-          {/* Category Form here */}
-          <div className="max-w-4xl w-full mx-auto md:min-h-[68vh] overflow-y-auto">
-            {category === 'Geography' && (
-              <div className="text-md font-medium mb-4">
-                <div>Do you want 100,000 points? (Complete all)</div>
+            <main className="flex-1 w-full max-w-7xl mx-auto p-4">
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold">{steps[currentStep]?.label}</h2>
+                  <div className="flex items-center gap-2 sm:hidden">
+                    <UsernameMenu />
+                  </div>
+                </div>
+
+                {steps[currentStep]?.label === 'Nakedness' && (
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-medium">How naked is your idea?</h3>
+                    <p className="text-gray-600">The simpler, the better</p>
+                  </div>
+                )}
+
+                <Card className="shadow-md">
+                  <CardContent className="p-6">
+                    {currentChallenges.map((challenge: Challenge) => (
+                      <div key={challenge.id} className="mb-8">
+                        <ChallengesRenderer
+                          challenge={challenge}
+                          response={responses[challenge.id] || ''}
+                          onChange={(value) => updateResponses(challenge.id, value)}
+                        />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
               </div>
-            )}
-            {challenges.map((c: Challenge) => (
-              <Card className="mb-4" key={c.id}>
-                <CardContent>
-                  <ChallengesRenderer key={c.id} challenge={c} response={responses[c.id] || ''} onChange={(val) => updateResponses(c.id, val)} />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="max-w-4xl w-full mx-auto flex justify-between gap-3 mt-5">
-            <div>
-              {/* <Button
-                className="bg-blue-700 hover:bg-blue-900"
-                onClick={() => {
-                  router.push('/new-idea');
-                }}
-              >
-                Back
-              </Button> */}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={prev} className="flex items-center gap-2">
-                <IoIosArrowBack className="w-5 h-5" />
-                <span className="sr-only">Previous</span>
-              </Button>
-              <Button onClick={next} disabled={currentStep === steps.length - 1} className="flex items-center gap-2">
-                <IoIosArrowForward className="w-5 h-5" />
-                <span className="sr-only">Next</span>
-              </Button>
-            </div>
+            </main>
           </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+      <StickyFooter
+        onNext={next}
+        onPrev={prev}
+        isFirstStep={currentStep === 0}
+        isLastStep={currentStep === steps.length - 1}
+      />
+    </div>
   );
 };
 

@@ -1,17 +1,18 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
+import { RootState } from '@/store';
+import { resetForm } from '@/store/slices/ideaCreationSlice';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
-import PaymentDialog from '../dialogs/payment-dialog';
 import { useDispatch, useSelector } from 'react-redux';
-import { resetForm } from '@/store/slices/ideaCreationSlice';
+import PaymentDialog from '../dialogs/payment-dialog';
 
 type Challenge = {
   id: string;
@@ -37,18 +38,19 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
   const { user } = useAuth();
   const router = useRouter();
   const dispatch = useDispatch();
-  const { score, title, description, responses } = useSelector((state: any) => state.ideaCreation);
+  const { score, title, description, responses } = useSelector((state: RootState) => state.ideaCreation);
   const currentPpm = useSelector((state: any) => state.carbonCount.currentPpm);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [hoveredOption, setHoveredOption] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.isIdVerified && challenge.type === 'verify') {
       onChange('verified');
     }
-  }, [user, challenge.type]);
+  }, [user, challenge.type, onChange]);
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
@@ -87,22 +89,28 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
     recaptchaRef.current?.reset();
     setCaptchaToken(null);
 
+    if (!currentPpm) {
+      toast.error('Please refresh or wait for the ppm value to be displayed');
+      return;
+    }
+
+    if (!title) {
+      toast.error('Please provide the title of your idea');
+      return;
+    }
+
     // Proceed with registration
     try {
       setLoading(true);
-      if (!currentPpm) {
-        toast.error('Please refresh or wait for the ppm value to be displayed');
-        return;
-      }
 
       const payload = {
-        title: title || 'Idea title',
-        description: description || 'Idea description',
+        title: title || 'Anonymous',
+        description: description,
         w3wLocation: responses.geo_1 ? responses.geo_1 : "",
         citations: responses.bonus_1 ? [responses.bonus_1] : [],
         score: Math.max((score ?? 0) - currentPpm, 0),
       };
-      
+
       const token = localStorage.getItem('user_token');
       if (!token) {
         toast.error('User not authenticated');
@@ -130,7 +138,7 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       }
 
       router.push('/');
-      
+
       toast.success(data?.message || 'Idea creation successful');
       dispatch(resetForm());
     } catch (error: any) {
@@ -145,19 +153,84 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
     router.push('/payment');
   };
 
+  // Calculate potential score change if this option is selected
+  const calculateScoreChange = (optionValue: string) => {
+    if (!challenge.options) return 0;
+
+    // Find the score of the currently hovered option
+    const option = challenge.options.find(opt => opt.value === optionValue);
+    if (!option) return 0;
+
+    // If we're hovering over the currently selected option, deselection would reduce score
+    if (response === optionValue) {
+      return -option.score;
+    }
+
+    // If another option is already selected, we replace its score with the new one
+    if (response) {
+      const currentOption = challenge.options.find(opt => opt.value === response);
+      return option.score - (currentOption?.score || 0);
+    }
+
+    // Otherwise it's a new selection
+    return option.score;
+  };
+
   return (
     <div className="">
       <Label className="block text-md font-medium mb-3">{challenge.challenge}</Label>
 
       {challenge.type === 'mcq' && challenge.options && (
-        <RadioGroup value={response} onValueChange={onChange} className="flex flex-col gap-2">
-          {challenge.options.map((opt, index) => (
-            <div key={index} className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted transition-all cursor-pointer" onClick={() => onChange(opt.value.toString())}>
-              <RadioGroupItem value={opt.value} id={`${challenge.id}-${opt.value}`} />
-              <Label htmlFor={`${challenge.id}-${opt.value}`}>{opt.label}</Label>
-            </div>
-          ))}
-        </RadioGroup>
+        <div className="flex flex-col gap-2">
+          {challenge.options.map((opt, index) => {
+            const isSelected = response === opt.value;
+            const scoreChange = calculateScoreChange(opt.value);
+            const isHovered = hoveredOption === opt.value;
+
+            return (
+              <div
+                key={index}
+                className={`flex items-center justify-between rounded-lg border p-3 transition-all cursor-pointer
+                  ${isSelected ? 'border-blue-500 bg-blue-50' : 'hover:bg-muted'}
+                `}
+                onClick={() => {
+                  // Toggle selection - if already selected, clear it
+                  onChange(isSelected ? '' : opt.value);
+                }}
+                onMouseEnter={() => setHoveredOption(opt.value)}
+                onMouseLeave={() => setHoveredOption(null)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-300'}`}>
+                    {isSelected && (
+                      <div className="h-2.5 w-2.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <Label htmlFor={`${challenge.id}-${opt.value}`} className="cursor-pointer">
+                    {opt.label}
+                  </Label>
+                </div>
+
+                <div className="flex items-center">
+                  {(isHovered || isSelected) && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className={`text-sm font-medium px-2 py-1 rounded ${scoreChange > 0 ? 'bg-green-100 text-green-800' :
+                          scoreChange < 0 ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                        }`}
+                    >
+                      {scoreChange > 0 ? `+${scoreChange.toLocaleString()}` :
+                        scoreChange < 0 ? scoreChange.toLocaleString() :
+                          '0'} points
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {challenge.type === 'text' && <Input placeholder={challenge.placeholder || 'Type here...'} value={response} onChange={(e) => onChange(e.target.value)} />}
@@ -200,7 +273,7 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
         </div>
       )}
 
-      <PaymentDialog 
+      <PaymentDialog
         open={showPaymentDialog}
         onOpenChange={setShowPaymentDialog}
         onPay={handlePayment}

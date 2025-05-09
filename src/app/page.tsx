@@ -1,18 +1,17 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import UsernameMenu from '@/components/common/username-menu';
 import { Button } from '@/components/ui/button';
-import { ColumnDef, ColumnFiltersState, SortingState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
-import { ArrowUpDown, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useEffect, useState } from 'react';
-import UsernameMenu from '@/components/common/username-menu';
 import { useAuth } from '@/context/AuthContext';
-import CarbonCount from '@/components/common/CarbonCount';
-import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { setIdeas } from '@/store/slices/ideasSlice';
+import { ColumnDef, ColumnFiltersState, SortingState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { ArrowUpDown, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
 
 type PlayerIdea = {
   _id: string;
@@ -199,7 +198,7 @@ export default function Home() {
 
     fetchIdeas();
 
-    return () => {};
+    return () => { };
   }, []);
 
   const handleClick = () => {
@@ -226,13 +225,15 @@ export default function Home() {
 
       {/* Carbon Clock Section - Full Viewport Height */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-6 tracking-tight [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">Carbon Clock</h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">Tracking global carbon dioxide levels in real-time</p>
-          <div className="inline-block">
-            <div className="text-7xl sm:text-9xl font-bold text-gray-500 tracking-tight [text-shadow:_0_4px_20px_rgba(0,0,0,0.15)]">{currentPpm.toFixed(8)}</div>
-            <div className="text-3xl text-gray-600 mt-4 font-medium [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">parts per million</div>
-          </div>
+        <div className="text-center max-w-4xl mx-auto px-4">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-gray-900 mb-4 md:mb-6 tracking-tight [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">Carbon Clock</h1>
+          <p className="text-lg md:text-xl text-gray-600 mb-8 md:mb-12 max-w-2xl mx-auto">Tracking global carbon dioxide levels in real-time</p>
+          {currentPpm !== 0 && (
+            <div className="inline-block">
+              <div className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-gray-500 tracking-tight [text-shadow:_0_4px_20px_rgba(0,0,0,0.15)]">{currentPpm.toFixed(8)}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl text-gray-600 mt-2 md:mt-4 font-medium [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">parts per million</div>
+            </div>
+          )}
         </div>
         {/* Scroll indicator */}
         <div className="absolute bottom-8 animate-bounce">
