@@ -23,8 +23,6 @@ import { FaRedo } from 'react-icons/fa';
 const ideaSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
   description: Yup.string().required('Description is required'),
-  // w3wlocation: Yup.string().required('W3W Location is required'),
-  // citedIdeas: Yup.array().of(Yup.string()),
 });
 
 const page = () => {
@@ -44,7 +42,7 @@ const page = () => {
       // w3wlocation: w3wlocation || '',
       // citedIdeas: citedIdeas || [],
     },
-    validationSchema: ideaSchema,
+    // validationSchema: ideaSchema,
     onSubmit: async (values) => {
       if (!captchaToken) {
         toast.error('Please verify you are human');
