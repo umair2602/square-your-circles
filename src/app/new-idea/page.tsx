@@ -1,24 +1,25 @@
 'use client';
-import React from 'react';
-import { useState, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { setTitle, setDescription, setW3wLocation, setCitedIdeas, resetForm } from '@/store/slices/ideaCreationSlice';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import CarbonCount from '@/components/common/CarbonCount';
 import UsernameMenu from '@/components/common/username-menu';
 import VerificationDialog from '@/components/dialogs/verification-dialog';
-import { useRouter } from 'next/navigation';
-import ReCAPTCHA from 'react-google-recaptcha';
-import toast from 'react-hot-toast';
-import CarbonCount from '@/components/common/CarbonCount';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/AuthContext';
+import { resetForm, setDescription, setTitle } from '@/store/slices/ideaCreationSlice';
+import { useFormik } from 'formik';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { FaRedo } from 'react-icons/fa';
+import { useDispatch, useSelector } from 'react-redux';
+import * as Yup from 'yup';
+
+// Dynamic import with no SSR
+const RecaptchaComponent = dynamic(() => import('@/components/common/Recaptcha'), { ssr: false });
 
 const ideaSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
@@ -32,7 +33,6 @@ const page = () => {
   const { title, description, w3wlocation, citedIdeas } = useSelector((state: any) => state.ideaCreation);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -171,18 +171,15 @@ const page = () => {
             </CardContent>
           </Card>
           <div className="flex justify-end mt-3.5">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={`${process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}`}
+            <RecaptchaComponent
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
               onChange={handleCaptchaChange}
-              onExpired={() => {
-                setCaptchaToken(null);
-              }}
+              onExpired={() => setCaptchaToken(null)}
             />
             <Button
               type="submit"
               className="bg-gray-500 hover:bg-gray-900 text-white ml-4"
-              // disabled={formik.isSubmitting}
+            // disabled={formik.isSubmitting}
             >
               Next
             </Button>
