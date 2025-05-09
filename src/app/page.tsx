@@ -1,18 +1,17 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import UsernameMenu from '@/components/common/username-menu';
 import { Button } from '@/components/ui/button';
-import { ColumnDef, ColumnFiltersState, SortingState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
-import { ArrowUpDown, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useEffect, useState } from 'react';
-import UsernameMenu from '@/components/common/username-menu';
 import { useAuth } from '@/context/AuthContext';
-import CarbonCount from '@/components/common/CarbonCount';
-import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { setIdeas } from '@/store/slices/ideasSlice';
+import { ColumnDef, ColumnFiltersState, SortingState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { ArrowUpDown, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
 
 type PlayerIdea = {
   _id: string;
@@ -199,7 +198,7 @@ export default function Home() {
 
     fetchIdeas();
 
-    return () => {};
+    return () => { };
   }, []);
 
   const handleClick = () => {

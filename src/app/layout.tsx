@@ -1,10 +1,12 @@
+import BackgroundMark from '@/components/common/BackgroundMark';
+import CarbonWrapper from '@/components/common/CarbonWrapper';
+import { AuthProvider } from '@/context/AuthContext';
+import { MarkProvider } from '@/context/MarkContext';
+import ReduxProvider from '@/store/redux-provider';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
-import { AuthProvider } from '@/context/AuthContext';
-import ReduxProvider from '@/store/redux-provider';
 import { Toaster } from 'react-hot-toast';
-import CarbonWrapper from '@/components/common/CarbonWrapper';
+import './globals.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,10 +33,13 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ReduxProvider>
           <AuthProvider>
-            <CarbonWrapper>
-              <Toaster position="top-right" />
-              {children}
-            </CarbonWrapper>
+            <MarkProvider initialVariant="background" initialThreshold={10}>
+              <CarbonWrapper>
+                <BackgroundMark />
+                <Toaster position="top-right" />
+                {children}
+              </CarbonWrapper>
+            </MarkProvider>
           </AuthProvider>
         </ReduxProvider>
       </body>
