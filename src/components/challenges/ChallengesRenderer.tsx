@@ -7,12 +7,15 @@ import { RootState } from '@/store';
 import { resetForm } from '@/store/slices/ideaCreationSlice';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import ReCAPTCHA from 'react-google-recaptcha';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import PaymentDialog from '../dialogs/payment-dialog';
+
+// Dynamic import with no SSR
+const RecaptchaComponent = dynamic(() => import('@/components/common/Recaptcha'), { ssr: false });
 
 type Challenge = {
   id: string;
@@ -42,7 +45,7 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
   const currentPpm = useSelector((state: any) => state.carbonCount.currentPpm);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const recaptchaRef = useRef<any>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
 
@@ -211,8 +214,8 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className={`text-sm font-medium px-2 py-1 rounded ${scoreChange > 0 ? 'bg-green-100 text-green-800' :
-                          scoreChange < 0 ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
+                        scoreChange < 0 ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}
                     >
                       {scoreChange > 0 ? `+${scoreChange.toLocaleString()}` :
@@ -233,7 +236,11 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
         <div className="space-y-4">
           {!user?.isIdVerified && (
             <div className="flex justify-center">
-              <ReCAPTCHA ref={recaptchaRef} sitekey={`${process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}`} onChange={handleCaptchaChange} onExpired={() => setCaptchaToken(null)} />
+              <RecaptchaComponent
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
+                onChange={handleCaptchaChange}
+                onExpired={() => setCaptchaToken(null)}
+              />
             </div>
           )}
           <Button onClick={verifyYoti} className="w-full" disabled={user?.isIdVerified}>
@@ -251,7 +258,11 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       {challenge.type === 'register' && (
         <div className="space-y-4">
           <div className="flex justify-center">
-            <ReCAPTCHA ref={recaptchaRef} sitekey={`${process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}`} onChange={handleCaptchaChange} onExpired={() => setCaptchaToken(null)} />
+            <RecaptchaComponent
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
+              onChange={handleCaptchaChange}
+              onExpired={() => setCaptchaToken(null)}
+            />
           </div>
           <Button onClick={handleRegisterScore} disabled={loading} className="w-full">
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

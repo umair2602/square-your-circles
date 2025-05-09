@@ -95,7 +95,7 @@ export default function LeaderboardPosition({ variant = 'Position' }: Leaderboar
                         transition={{ duration: 0.5 }}
                         className="text-gray-500 font-medium flex items-center"
                     >
-                        <span className={percentile && getPercentileColor(percentile)}>
+                        <span className={percentile ? getPercentileColor(percentile) : ''}>
                             {position}
                         </span>
                         <span className="mx-1">/</span>
