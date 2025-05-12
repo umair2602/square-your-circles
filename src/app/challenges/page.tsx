@@ -128,6 +128,14 @@ const categoryChallenges = {
   ],
   Geography: [
     {
+      id: 'cust_2',
+      challenge: 'Do you want 10,000 points?',
+      type: 'mcq',
+      options: [
+        { label: 'You have shown your idea to some presumed stakeholders and turned them into Re:designers by changing your offer of service based on their views.', value: 'op_2', score: 10000 },
+      ],
+    },
+    {
       id: 'geo_1',
       challenge: 'Enter W3W square words location',
       type: 'text',
