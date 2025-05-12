@@ -17,6 +17,9 @@ function AnimatedDigit({ value, index }: { value: string; index: number }) {
     );
   }
 
+  // Determine if this is the last digit (for faster animation)
+  const isLastDigit = index === 8; // The 8th index is the last digit (0-based)
+
   return (
     <div className="inline-block w-[0.7em] h-[1.4em] relative overflow-hidden text-center">
       <AnimatePresence mode="wait" initial={false}>
@@ -26,7 +29,11 @@ function AnimatedDigit({ value, index }: { value: string; index: number }) {
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 20, opacity: 0 }}
-          transition={{ duration: 0.2, delay: index * 0.02 }}
+          transition={{
+            duration: isLastDigit ? 0.05 : 0.2,
+            ease: isLastDigit ? "linear" : "easeOut",
+            delay: isLastDigit ? 0 : index * 0.02
+          }}
         >
           {value}
         </motion.span>
