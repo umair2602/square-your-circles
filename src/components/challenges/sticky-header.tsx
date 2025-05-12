@@ -74,6 +74,7 @@ export function StickyHeader() {
                 <div className="hidden sm:block">
                     <UsernameMenu />
                 </div>
+                <CarbonCount />
             </div>
         </div>
     );
