@@ -10,6 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import CarbonCount from './CarbonCount';
+import UsernameMenu from './username-menu';
 
 // Define animation variants
 const digitVariants: Variants = {
@@ -35,27 +36,6 @@ const digitVariants: Variants = {
     }
 };
 
-/**
- * AnimatedDigit - Shows a single digit with animation when it changes
- */
-function AnimatedDigit({ value, index }: { value: string; index: number }) {
-    return (
-        <div className="inline-block w-[0.6em] h-[1.2em] relative overflow-hidden text-center">
-            <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                    key={`${value}-${index}`}
-                    variants={digitVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="absolute inset-0 flex items-center justify-center"
-                >
-                    {value}
-                </motion.span>
-            </AnimatePresence>
-        </div>
-    );
-}
 
 const navLinks = [
     { name: 'Home', path: '/' },
@@ -71,14 +51,8 @@ export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const currentPpm = useSelector((state: RootState) => state.carbonCount.currentPpm);
-    const [formattedPpm, setFormattedPpm] = useState("427.7557");
+    const { username } = useSelector((state: any) => state.ideaCreation);
 
-    useEffect(() => {
-        if (currentPpm) {
-            // Format to show fewer decimal places for the header display
-            setFormattedPpm(currentPpm.toFixed(4));
-        }
-    }, [currentPpm]);
 
     // Handle scroll event to add shadow to navbar
     useEffect(() => {
@@ -129,20 +103,38 @@ export default function Navbar() {
 
                     {/* Carbon Clock & Buttons */}
                     <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
-                        <Button
-                            onClick={() => router.push('/login')}
-                            className="bg-gray-900 hover:bg-black text-white rounded-md text-xs sm:text-sm"
-                            size="sm"
-                        >
-                            Login
-                        </Button>
-                        <Button
-                            onClick={() => router.push('/new-idea')}
-                            className="bg-gray-600 hover:bg-gray-700 text-white rounded-md text-xs sm:text-sm"
-                            size="sm"
-                        >
-                            New Idea
-                        </Button>
+                        {
+                            pathname !== '/new-idea' && (
+                                <>
+                                    {
+                                        !username && (
+                                            <Button
+                                                onClick={() => router.push('/login')}
+                                                className="bg-gray-900 hover:bg-black text-white rounded-md text-xs sm:text-sm hover:cursor-pointer"
+                                                size="sm"
+                                            >
+                                                Login
+
+                                            </Button>
+                                        )
+                                    }
+
+                                    <Button
+                                        onClick={() => router.push('/new-idea')}
+                                        className="bg-gray-600 hover:bg-gray-700 text-white rounded-md text-xs sm:text-sm hover:cursor-pointer"
+                                        size="sm"
+                                    >
+                                        New Idea
+                                    </Button>
+
+                                </>
+                            )
+                        }
+                        {
+                            username && (
+                                <UsernameMenu />
+                            )
+                        }
                         {
                             pathname !== '/' && (
                                 <CarbonCount />
@@ -152,6 +144,11 @@ export default function Navbar() {
 
                     {/* Mobile menu button */}
                     <div className="md:hidden flex items-center gap-2">
+                        {
+                            username && (
+                                <UsernameMenu />
+                            )
+                        }
                         {pathname !== '/' && (
                             <div className="bg-gray-100 rounded-md px-2 py-1">
                                 <CarbonCount className="text-xs" />
@@ -160,7 +157,7 @@ export default function Navbar() {
 
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="text-gray-600 hover:text-gray-900 focus:outline-none"
+                            className="text-gray-600 hover:text-gray-900 focus:outline-none hover:cursor-pointer"
                             aria-label="Toggle menu"
                         >
                             {isOpen ? (
@@ -194,22 +191,30 @@ export default function Navbar() {
                                     {link.name}
                                 </Link>
                             ))}
-                            <div className="pt-4 pb-2 border-t border-gray-200 flex flex-col gap-2">
-                                <Button
-                                    onClick={() => router.push('/login')}
-                                    className="w-full bg-gray-900 hover:bg-black text-white rounded-md"
-                                    size="sm"
-                                >
-                                    Login
-                                </Button>
-                                <Button
-                                    onClick={() => router.push('/new-idea')}
-                                    className="w-full bg-gray-600 hover:bg-gray-700 text-white rounded-md"
-                                    size="sm"
-                                >
-                                    New Idea
-                                </Button>
-                            </div>
+                            {pathname !== '/new-idea' && (
+                                <div className="pt-4 pb-2 border-t border-gray-200 flex flex-col gap-2">
+                                    {
+                                        !username && (
+                                            <Button
+                                                onClick={() => router.push('/login')}
+                                                className="w-full bg-gray-900 hover:bg-black text-white rounded-md hover:cursor-pointer"
+                                                size="sm"
+                                            >
+                                                Login
+                                            </Button>
+                                        )
+                                    }
+                                    <Button
+                                        onClick={() => router.push('/new-idea')}
+                                        className="w-full bg-gray-600 hover:bg-gray-700 text-white rounded-md hover:cursor-pointer"
+                                        size="sm"
+                                    >
+                                        New Idea
+                                    </Button>
+
+                                </div>
+                            )}
+
                         </div>
                     </motion.div>
                 )}

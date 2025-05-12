@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { RootState } from '@/store';
 import { resetForm } from '@/store/slices/ideaCreationSlice';
-import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
@@ -165,9 +164,10 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
     const option = challenge.options.find(opt => opt.value === optionValue);
     if (!option) return 0;
 
-    // If we're hovering over the currently selected option, deselection would reduce score
+    // If we're hovering over the currently selected option, show its actual score value
+    // instead of showing what would happen if we deselected it
     if (response === optionValue) {
-      return -option.score;
+      return option.score;
     }
 
     // If another option is already selected, we replace its score with the new one
@@ -245,18 +245,16 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
 
                 <div className="flex items-center">
                   {(isHovered || isSelected) && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className={`text-sm font-medium px-2 py-1 rounded ${scoreChange > 0 ? 'bg-green-100 text-green-800' :
+                    <div
+                      className={`text-sm font-medium px-2 py-1 rounded transition-colors ${scoreChange > 0 ? 'bg-green-100 text-green-800' :
                         scoreChange < 0 ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}
                     >
                       {scoreChange > 0 ? `+${scoreChange.toLocaleString()}` :
-                        scoreChange === 0 ? '0' :
+                        scoreChange < 0 ? `${scoreChange.toLocaleString()}` :
                           '0'} points
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               </div>

@@ -219,6 +219,9 @@ const digitVariants: Variants = {
  * AnimatedDigit - Shows a single digit with animation when it changes
  */
 function AnimatedDigit({ value, index }: { value: string; index: number }) {
+  // Determine if this is the last digit (for faster animation)
+  const isLastDigit = index === 8; // The 8th index is the last digit (0-based)
+
   return (
     <div className="inline-block w-[0.6em] h-[1.2em] relative overflow-hidden text-center">
       <AnimatePresence mode="wait" initial={false}>
@@ -229,6 +232,11 @@ function AnimatedDigit({ value, index }: { value: string; index: number }) {
           animate="visible"
           exit="exit"
           className="absolute inset-0 flex items-center justify-center"
+          transition={{
+            duration: isLastDigit ? 0.05 : 0.3, // Make last digit animation very fast
+            ease: isLastDigit ? "linear" : "easeOut", // Linear for last digit looks smoother in sequence
+            delay: isLastDigit ? 0 : 0.05
+          }}
         >
           {value}
         </motion.span>
@@ -251,6 +259,27 @@ export default function Home() {
       setFormattedPpm(currentPpm.toFixed(8));
     }
   }, [currentPpm]);
+
+  // Add a 100ms interval to update the carbon count frequently for smooth animation
+  useEffect(() => {
+    // Initial standard update of the carbon count (all digits)
+    dispatch({ type: 'carbonCount/updateCurrentPpm' });
+
+    // Then set up a fast interval just for the last digit to sequence through 0-9
+    const sequenceInterval = setInterval(() => {
+      dispatch({ type: 'carbonCount/incrementLastDigit' });
+    }, 100); // Fast enough for smooth animation but slow enough to see each digit
+
+    // Also set up a slower interval to update the rest of the digits periodically
+    const updateInterval = setInterval(() => {
+      dispatch({ type: 'carbonCount/updateCurrentPpm' });
+    }, 5000); // Update rest of digits every 5 seconds
+
+    return () => {
+      clearInterval(sequenceInterval);
+      clearInterval(updateInterval);
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     const fetchIdeas = async () => {
