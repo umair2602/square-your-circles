@@ -20,8 +20,8 @@ const signupSchema = Yup.object().shape({
     .max(50, 'Maximum 50 charaters')
     .required('Email is required'),
   password: Yup.string()
-    .min(8, 'Minimum 8 charaters')
-    .max(50, 'Maximum 50 charaters')
+    .min(8, 'Minimum 8 characters')
+    .max(100, 'Maximum 100 characters')
     .required('Password is required'),
   confirmPassword: Yup.string()
     .required('Please confirm your password')

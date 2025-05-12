@@ -369,6 +369,22 @@ const page = () => {
     return true;
   };
 
+  const handleStepChange = (newStep: number) => {
+    // Get current category before changing step
+    const currentCategory = steps[currentStep].label as keyof typeof categoryChallenges;
+
+    // Run appropriate score calculations based on current category
+    if (currentCategory === 'Geography') {
+      handleGeographyScore();
+    } else if (currentCategory === 'Bonus') {
+      handleBonusScore();
+    } else if (currentCategory === 'Time') {
+      handleTimeSubmission();
+    }
+    
+    dispatch(setCurrentStep(newStep));
+  };
+
   const prev = () => {
     if (currentStep === 0) {
       router.push('/new-idea');
@@ -390,7 +406,7 @@ const page = () => {
             <AppSidebar
               steps={steps}
               currentStep={currentStep}
-              onStepClick={(index) => dispatch(setCurrentStep(index))}
+              onStepClick={handleStepChange}
             />
           </div>
           <div className="flex-1 bg-white flex flex-col h-full overflow-auto">

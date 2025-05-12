@@ -93,17 +93,23 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
     recaptchaRef.current?.reset();
     setCaptchaToken(null);
 
+    if (!currentPpm) {
+      toast.error('Please refresh or wait for the ppm value to be displayed');
+      return;
+    }
+
+    if (!title) {
+      toast.error('Please provide the title of your idea');
+      return;
+    }
+
     // Proceed with registration
     try {
       setLoading(true);
-      if (!currentPpm) {
-        toast.error('Please refresh or wait for the ppm value to be displayed');
-        return;
-      }
 
       const payload = {
-        title: title || 'Idea title',
-        description: description || 'Idea description',
+        title: title || 'Anonymous',
+        description: description,
         w3wLocation: responses.geo_1 ? responses.geo_1 : "",
         citations: responses.bonus_1 ? [responses.bonus_1] : [],
         score: Math.max((score ?? 0) - currentPpm, 0),
