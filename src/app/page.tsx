@@ -1,5 +1,7 @@
 'use client';
-import UsernameMenu from '@/components/common/username-menu';
+import BrandWatermark from '@/components/common/BrandWatermark';
+import Navbar from '@/components/common/Navbar';
+import TopLeaderboard from '@/components/common/TopLeaderboard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,6 +9,8 @@ import { useAuth } from '@/context/AuthContext';
 import type { RootState } from '@/store';
 import { setIdeas } from '@/store/slices/ideasSlice';
 import { ColumnDef, ColumnFiltersState, SortingState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import type { Variants } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpDown, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -21,67 +25,69 @@ type PlayerIdea = {
   w3w: string;
 };
 
-const columns: ColumnDef<PlayerIdea>[] = [
-  {
-    accessorKey: 'username',
-    header: ({ column }) => {
-      return (
-        <Button className="has-[>svg]:px-0" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Username
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div>{row.getValue('username')}</div>,
-  },
-  {
-    accessorKey: 'ideaTitle',
-    header: ({ column }) => {
-      return (
-        <Button className="has-[>svg]:px-0" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Idea title
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div>{row.getValue('ideaTitle')}</div>,
-  },
-  {
-    accessorKey: 'carbonCount',
-    header: ({ column }) => {
-      return (
-        <Button className="has-[>svg]:px-0" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Final score
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div>{row.getValue('carbonCount')}</div>,
-  },
-  {
-    accessorKey: 'w3w',
-    header: 'W3W square',
-    cell: ({ row }) => {
-      const w3w = row.getValue('w3w') as string;
-      return (
-        <a href={`https://what3words.com/${w3w}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-          {w3w}
-        </a>
-      );
-    },
-  },
-];
-
 function PlayerIdeasTable() {
   const ideas = useSelector((state: RootState) => state.ideas.ideas);
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: 'carbonCount',
-      desc: false,
+      desc: true,
     },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  const columns: ColumnDef<PlayerIdea>[] = [
+    {
+      accessorKey: 'username',
+      header: ({ column }) => {
+        return (
+          <Button className="has-[>svg]:px-0" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+            Username
+            <ArrowUpDown className="ml-1 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="font-medium">{row.getValue('username')}</div>,
+    },
+    {
+      accessorKey: 'ideaTitle',
+      header: ({ column }) => {
+        return (
+          <Button className="has-[>svg]:px-0" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+            Idea title
+            <ArrowUpDown className="ml-1 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="truncate max-w-[150px] md:max-w-[200px]">{row.getValue('ideaTitle')}</div>,
+      enableHiding: true,
+    },
+    {
+      accessorKey: 'carbonCount',
+      header: ({ column }) => {
+        return (
+          <Button className="has-[>svg]:px-0" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+            Final score
+            <ArrowUpDown className="ml-1 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="font-semibold text-right">{Number(row.getValue('carbonCount')).toLocaleString()}</div>,
+    },
+    {
+      accessorKey: 'w3w',
+      header: 'W3W square',
+      cell: ({ row }) => {
+        const w3w = row.getValue('w3w') as string;
+        return (
+          <a href={`https://what3words.com/${w3w}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline truncate block max-w-[100px] md:max-w-full">
+            {w3w}
+          </a>
+        );
+      },
+      enableHiding: true,
+    },
+  ];
 
   const table = useReactTable({
     data: ideas,
@@ -90,6 +96,10 @@ function PlayerIdeasTable() {
       sorting,
       columnFilters,
       globalFilter,
+      columnVisibility: {
+        ideaTitle: window.innerWidth > 640, // Hide on mobile
+        w3w: window.innerWidth > 480, // Hide on small mobile
+      },
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -103,6 +113,19 @@ function PlayerIdeasTable() {
     },
   });
 
+  // Add responsive column visibility on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      table.setColumnVisibility({
+        ideaTitle: window.innerWidth > 640,
+        w3w: window.innerWidth > 480,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [table]);
+
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setGlobalFilter(value);
@@ -110,45 +133,48 @@ function PlayerIdeasTable() {
 
   return (
     <div className="w-full">
-      <div className="text-center text-2xl font-semibold">Leaderboard</div>
-      <div className="flex items-center py-4">
-        <div className="relative w-full max-w-sm">
+      <div className="flex items-center gap-2 flex-wrap py-4">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-          <Input placeholder="Search username, score, or W3W square" value={globalFilter ?? ''} onChange={handleFilterChange} className="pl-8 max-w-xs bg-white" />
+          <Input placeholder="Search username, score, or W3W square" value={globalFilter ?? ''} onChange={handleFilterChange} className="pl-8 w-full max-w-xs bg-white" />
         </div>
+        <div className="text-sm text-gray-600">{table.getFilteredRowModel().rows.length} results</div>
       </div>
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden min-h-[411.5px]">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center py-4">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center py-4">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       <div className="flex items-center justify-between py-4 px-2">
-        <div className="text-sm text-gray-600">{table.getFilteredRowModel().rows.length} results found</div>
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} className="border-gray-200 hover:bg-gray-50">
             Previous
@@ -157,10 +183,60 @@ function PlayerIdeasTable() {
             Next
           </Button>
         </div>
+        <div className="text-sm text-gray-500">
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+        </div>
       </div>
     </div>
   );
 }
+
+// Define animation variants
+const digitVariants: Variants = {
+  hidden: {
+    y: -30,
+    opacity: 0
+  },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut"
+    }
+  },
+  exit: {
+    y: 30,
+    opacity: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeIn"
+    }
+  }
+};
+
+/**
+ * AnimatedDigit - Shows a single digit with animation when it changes
+ */
+function AnimatedDigit({ value, index }: { value: string; index: number }) {
+  return (
+    <div className="inline-block w-[0.6em] h-[1.2em] relative overflow-hidden text-center">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={`${value}-${index}`}
+          variants={digitVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+}
+
 
 export default function Home() {
   const { user } = useAuth();
@@ -168,6 +244,13 @@ export default function Home() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const currentPpm = useSelector((state: any) => state.carbonCount.currentPpm);
+  const [formattedPpm, setFormattedPpm] = useState("427.75572087");
+
+  useEffect(() => {
+    if (currentPpm) {
+      setFormattedPpm(currentPpm.toFixed(8));
+    }
+  }, [currentPpm]);
 
   useEffect(() => {
     const fetchIdeas = async () => {
@@ -199,56 +282,59 @@ export default function Home() {
     fetchIdeas();
 
     return () => { };
-  }, []);
+  }, [dispatch]);
 
   const handleClick = () => {
     router.push('/new-idea');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Header with auth and new idea button - Fixed at top */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 py-4">
-          {user ? (
-            <UsernameMenu />
-          ) : (
-            <Button onClick={() => router.push('/login')} className="text-white">
-              Login
-            </Button>
-          )}
-          <Button onClick={handleClick} className="bg-gray-500 hover:bg-gray-900 text-white">
-            New Idea
-          </Button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-white">
+      {/* Background watermark */}
+      <BrandWatermark opacity={0.05} size="90vh" blur={1.2} offsetY={20} />
 
-      {/* Carbon Clock Section - Full Viewport Height */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-6 tracking-tight [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">Carbon Clock</h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">Tracking global carbon dioxide levels in real-time</p>
-          <div className="inline-block">
-            <div className="text-7xl sm:text-9xl font-bold text-gray-500 tracking-tight [text-shadow:_0_4px_20px_rgba(0,0,0,0.15)]">{currentPpm.toFixed(8)}</div>
-            <div className="text-3xl text-gray-600 mt-4 font-medium [text-shadow:_0_2px_10px_rgba(0,0,0,0.1)]">parts per million</div>
-          </div>
-        </div>
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 animate-bounce">
-          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-      </section>
+      {/* Navbar */}
+      <Navbar />
 
-      {/* Leaderboard Section */}
-      <section className="min-h-screen flex items-center bg-white px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <PlayerIdeasTable />
+      {/* Main content */}
+      <main className="pt-16"> {/* Add padding-top to account for fixed navbar */}
+        {/* Carbon Clock Section - Full Viewport Height */}
+        <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 pt-8 pb-8 relative">
+          <div className="max-w-4xl mx-auto w-full text-center">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-3 tracking-tight">Carbon Clock</h1>
+            <p className="text-base sm:text-lg text-gray-600 mb-10 sm:mb-12">Tracking global carbon dioxide levels in real-time</p>
+
+            <div className="text-[3rem] sm:text-[5rem] md:text-[7rem] lg:text-[8.5rem] font-bold text-[#576574] tracking-tight mb-2 sm:mb-4 leading-none whitespace-nowrap">
+              {formattedPpm.split('').map((digit, index) => (
+                <AnimatedDigit key={index} value={digit} index={index} />
+              ))}
+            </div>
+            <div className="text-xl sm:text-2xl text-gray-600 font-medium mb-16 sm:mb-20">parts per million</div>
+
+            <div className="mt-8 max-w-md mx-auto">
+              <TopLeaderboard />
+            </div>
           </div>
-        </div>
-      </section>
+
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 animate-bounce cursor-pointer"
+            onClick={() => document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' })}>
+            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </div>
+        </section>
+
+        {/* Leaderboard Section */}
+        <section id="leaderboard" className="min-h-screen flex items-center bg-white px-4 sm:px-6 lg:px-8 py-20 scroll-mt-16">
+          <div className="w-full max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Complete Leaderboard</h2>
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
+              <PlayerIdeasTable />
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

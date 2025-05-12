@@ -12,7 +12,7 @@ interface StickyFooterProps {
 
 export function StickyFooter({ onNext, onPrev, isFirstStep, isLastStep }: StickyFooterProps) {
     return (
-        <div className="sticky bottom-0 z-40 backdrop-blur-md bg-white/80 border-t border-gray-200 py-3 px-4 flex items-center justify-between w-full">
+        <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-gray-200 py-2 px-4 flex items-center justify-between w-full shadow-[0_-2px_4px_rgba(0,0,0,0.05)] h-14">
             <Button
                 onClick={onPrev}
                 disabled={isFirstStep}
@@ -25,7 +25,7 @@ export function StickyFooter({ onNext, onPrev, isFirstStep, isLastStep }: Sticky
             <Button
                 onClick={onNext}
                 disabled={isLastStep}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 bg-gray-800 hover:bg-gray-900"
             >
                 Next
                 <IoIosArrowForward className="h-4 w-4" />

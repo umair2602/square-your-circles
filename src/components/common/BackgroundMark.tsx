@@ -12,30 +12,34 @@ export default function BackgroundMark() {
     });
 
     if (computedVariant === 'corner') {
-        // Corner variant - small version in the corner
+        // Corner variant - balanced visibility
         return (
-            <div className="fixed top-20 right-4 w-20 h-20 z-10 pointer-events-none">
+            <div className="fixed top-20 right-4 w-16 h-16 z-10 pointer-events-none">
                 <Image
                     src="/squareyourcircles.svg"
                     alt="squareyourcircles"
-                    width={100}
-                    height={100}
-                    className="opacity-70"
+                    width={80}
+                    height={80}
+                    className="opacity-45"
+                    style={{ filter: 'blur(1px)' }}
                 />
             </div>
         );
     }
 
-    // Background variant - large version as background
+    // Background variant - more visible but still subtle
     return (
         <div className="fixed inset-0 w-full h-full pointer-events-none z-0 flex items-center justify-center">
-            <div className="relative w-screen h-screen max-w-[150vw] max-h-[150vh]">
+            <div className="relative w-[80vw] h-[80vh] max-w-[120vw] max-h-[120vh]">
                 <Image
                     src="/squareyourcircles.svg"
                     alt="squareyourcircles"
                     fill
-                    className="opacity-10"
-                    style={{ objectFit: 'contain' }}
+                    className="opacity-8"
+                    style={{
+                        objectFit: 'contain',
+                        filter: 'blur(2.5px)'
+                    }}
                     priority
                 />
             </div>
