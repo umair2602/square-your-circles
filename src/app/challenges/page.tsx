@@ -3,13 +3,16 @@ import { AppSidebar } from '@/components/challenges/app-sidebar';
 import { ChallengesRenderer } from '@/components/challenges/ChallengesRenderer';
 import { StickyFooter } from '@/components/challenges/sticky-footer';
 import { StickyHeader } from '@/components/challenges/sticky-header';
+import BrandWatermark from '@/components/common/BrandWatermark';
+import LogoWithText from '@/components/common/LogoWithText';
 import UsernameMenu from '@/components/common/username-menu';
 import { Card, CardContent } from '@/components/ui/card';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { setCurrentStep, setResponses, setScore } from '@/store/slices/ideaCreationSlice';
+import { setCurrentStep, setDescription, setResponses, setScore, setTitle } from '@/store/slices/ideaCreationSlice';
 import { setIdeas } from '@/store/slices/ideasSlice';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 
 type Option = {
@@ -62,8 +65,6 @@ const categoryChallenges = {
       type: 'mcq',
       options: [
         { label: 'Leave your user with nothing but the value add. (nothing but a smile)', value: 'op_1', score: 100000 },
-        { label: 'Sample wrong option', value: 'op_2', score: 0 },
-        { label: 'Sample wrong option', value: 'op_3', score: 0 },
       ],
     },
     {
@@ -71,9 +72,7 @@ const categoryChallenges = {
       challenge: 'Do you want 10,000 points?',
       type: 'mcq',
       options: [
-        { label: 'Sample wrong option', value: 'op_1', score: 0 },
         { label: 'Leave your user with something that will be collected by yourself for re-use. (a delayed smile)', value: 'op_2', score: 10000 },
-        { label: 'Sample wrong option', value: 'op_3', score: 0 },
       ],
     },
     {
@@ -81,8 +80,6 @@ const categoryChallenges = {
       challenge: 'Do you want 1000 points?',
       type: 'mcq',
       options: [
-        { label: 'Sample wrong option', value: 'op_1', score: 0 },
-        { label: 'Sample wrong option', value: 'op_2', score: 0 },
         { label: 'Leave user with something that has to be thrown into the refuse bin and collected from curbside.', value: 'op_3', score: 1000 },
       ],
     },
@@ -92,8 +89,6 @@ const categoryChallenges = {
       type: 'mcq',
       options: [
         { label: 'Leave user with something that will need to be collected by a third party e.g. curbside recycling. (an obligation/cost)', value: 'op_1', score: 1000 },
-        { label: 'Sample wrong option', value: 'op_2', score: 0 },
-        { label: 'Sample wrong option', value: 'op_3', score: 0 },
       ],
     },
   ],
@@ -104,8 +99,6 @@ const categoryChallenges = {
       type: 'mcq',
       options: [
         { label: 'You have shown your idea to some presumed stakeholders and as a result both your idea has changed and the presumed stakeholders have changed along the way.', value: 'op_1', score: 100000 },
-        { label: 'Sample wrong option', value: 'op_2', score: 0 },
-        { label: 'Sample wrong option', value: 'op_3', score: 0 },
       ],
     },
     {
@@ -113,9 +106,7 @@ const categoryChallenges = {
       challenge: 'Do you want 10,000 points?',
       type: 'mcq',
       options: [
-        { label: 'Sample wrong option', value: 'op_1', score: 0 },
         { label: 'You have shown your idea to some presumed stakeholders and turned them into Re:designers by changing your offer of service based on their views.', value: 'op_2', score: 10000 },
-        { label: 'Sample wrong option', value: 'op_3', score: 0 },
       ],
     },
     {
@@ -123,8 +114,6 @@ const categoryChallenges = {
       challenge: 'Do you want 1000 points?',
       type: 'mcq',
       options: [
-        { label: 'Sample wrong option', value: 'op_1', score: 0 },
-        { label: 'Sample wrong option', value: 'op_2', score: 0 },
         { label: 'You have shown your idea to some presumed stakeholders and kept your offer of service the same as before.', value: 'op_3', score: 1000 },
       ],
     },
@@ -134,8 +123,6 @@ const categoryChallenges = {
       type: 'mcq',
       options: [
         { label: 'You have not shown your idea to any stake holders at all.', value: 'op_1', score: 0 },
-        { label: 'Sample wrong option', value: 'op_2', score: 0 },
-        { label: 'Sample wrong option', value: 'op_3', score: 0 },
       ],
     },
   ],
@@ -172,6 +159,26 @@ const categoryChallenges = {
   Time: [
     {
       id: 'time_1',
+      challenge: 'Name your idea',
+      type: 'text',
+      placeholder: 'Give your idea a title',
+      validation: {
+        required: true,
+        errorMessage: 'Please provide a title for your idea'
+      }
+    },
+    {
+      id: 'time_2',
+      challenge: 'Describe your idea',
+      type: 'text',
+      placeholder: 'Briefly describe what your idea is about',
+      validation: {
+        required: true,
+        errorMessage: 'Please provide a description for your idea'
+      }
+    },
+    {
+      id: 'time_3',
       challenge: 'Register your final score',
       type: 'register',
       buttonText: 'Register Score',
@@ -279,14 +286,31 @@ const page = () => {
   };
 
   const handleTimeSubmission = () => {
-    if (originalCategory === 'Time' && responses['time_1'] === 'registered') {
-      // Final submission logic here
-      console.log('Final Score:', score);
-      // You can add API call here to save the score
+    if (originalCategory === 'Time') {
+      // Save title and description to store
+      if (responses['time_1']) {
+        dispatch(setTitle(responses['time_1']));
+      }
+
+      if (responses['time_2']) {
+        dispatch(setDescription(responses['time_2']));
+      }
+
+      if (responses['time_3'] === 'registered') {
+        // Final submission logic here
+        console.log('Final Score:', score);
+        // You can add API call here to save the score
+      }
     }
   };
 
   const next = () => {
+    // Check if there are any validation errors before proceeding
+    const isValidationPass = validateCurrentStep();
+    if (!isValidationPass) {
+      return;
+    }
+
     // Check scores before moving to next step
     if (originalCategory === 'Geography') {
       handleGeographyScore();
@@ -298,10 +322,57 @@ const page = () => {
     dispatch(setCurrentStep(Math.min(currentStep + 1, steps.length - 1)));
   };
 
+  // Validate current step fields
+  const validateCurrentStep = (): boolean => {
+    // Validate "Time" step form fields
+    if (originalCategory === 'Time') {
+      const titleField = responses['time_1'];
+      const descriptionField = responses['time_2'];
+
+      let isValid = true;
+
+      // Check if title is filled
+      if (!titleField && currentChallenges.find(c => c.id === 'time_1')?.validation?.required) {
+        toast.error('Please provide a title for your idea');
+        isValid = false;
+      }
+
+      // Check if description is filled
+      if (!descriptionField && currentChallenges.find(c => c.id === 'time_2')?.validation?.required) {
+        toast.error('Please provide a description for your idea');
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    // Validate Geography step
+    if (originalCategory === 'Geography') {
+      const w3wLocation = responses['geo_1'];
+
+      if (!w3wLocation && currentChallenges.find(c => c.id === 'geo_1')?.validation?.required) {
+        toast.error('Please provide a valid W3W location');
+        return false;
+      }
+
+      // Validate W3W format if there's a pattern
+      const pattern = currentChallenges.find(c => c.id === 'geo_1')?.validation?.pattern;
+      if (pattern && w3wLocation) {
+        const regex = new RegExp(pattern);
+        if (!regex.test(w3wLocation)) {
+          toast.error('Please provide a valid W3W location format');
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const handleStepChange = (newStep: number) => {
     // Get current category before changing step
     const currentCategory = steps[currentStep].label as keyof typeof categoryChallenges;
-    
+
     // Run appropriate score calculations based on current category
     if (currentCategory === 'Geography') {
       handleGeographyScore();
@@ -323,24 +394,30 @@ const page = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen overflow-hidden bg-gray-50">
+      {/* Background watermark */}
+      <BrandWatermark opacity={0.03} size="70vh" blur={2} offsetY={20} />
+
       <StickyHeader />
+
       <SidebarProvider>
-        <div className="flex flex-1 overflow-hidden">
-          <div className="hidden sm:block w-64 shrink-0">
+        <div className="flex flex-1 overflow-hidden pt-14 pb-14">
+          <div className="hidden sm:block w-64 shrink-0 pt-0 sticky top-14 h-[calc(100vh-28px)] z-30">
             <AppSidebar
               steps={steps}
               currentStep={currentStep}
               onStepClick={handleStepChange}
             />
           </div>
-          <div className="flex-1 bg-white flex flex-col h-screen overflow-auto">
-            <header className="flex justify-between px-6 py-4 border-b sm:hidden">
-              <h1 className="text-xl font-bold">Square Your Circles</h1>
+          <div className="flex-1 bg-white flex flex-col h-full overflow-auto">
+            <header className="flex justify-between px-6 py-4 border-b sm:hidden bg-white/90 backdrop-blur-md shadow-sm sticky top-14 z-30">
+              <div className="flex items-center gap-2">
+                <LogoWithText size="sm" />
+              </div>
               <SidebarTrigger className="sm:hidden" />
             </header>
 
-            <main className="flex-1 w-full max-w-7xl mx-auto p-4">
+            <main className="flex-1 w-full max-w-7xl mx-auto p-4 pb-20">
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold">{steps[currentStep]?.label}</h2>
@@ -374,6 +451,7 @@ const page = () => {
           </div>
         </div>
       </SidebarProvider>
+
       <StickyFooter
         onNext={next}
         onPrev={prev}

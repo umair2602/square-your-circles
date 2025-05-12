@@ -1,93 +1,35 @@
 'use client';
+import BrandWatermark from '@/components/common/BrandWatermark';
 import CarbonCount from '@/components/common/CarbonCount';
+import LogoWithText from '@/components/common/LogoWithText';
 import UsernameMenu from '@/components/common/username-menu';
-import VerificationDialog from '@/components/dialogs/verification-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
-import { resetForm, setDescription, setTitle } from '@/store/slices/ideaCreationSlice';
-import { useFormik } from 'formik';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import toast from 'react-hot-toast';
-import { FaRedo } from 'react-icons/fa';
-import { useDispatch, useSelector } from 'react-redux';
-import * as Yup from 'yup';
+import { useEffect, useState } from 'react';
+import { FaArrowRight } from 'react-icons/fa';
 
-// Dynamic import with no SSR
-const RecaptchaComponent = dynamic(() => import('@/components/common/Recaptcha'), { ssr: false });
+// Import directly but render conditionally
+import Recaptcha from '@/components/common/Recaptcha';
 
-const ideaSchema = Yup.object().shape({
-  title: Yup.string().required('Title is required'),
-  description: Yup.string().required('Description is required'),
-});
-
-const page = () => {
-  const dispatch = useDispatch();
+const Page = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const { title, description, w3wlocation, citedIdeas } = useSelector((state: any) => state.ideaCreation);
-  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showRecaptcha, setShowRecaptcha] = useState(false);
 
-  const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: {
-      title: title || '',
-      description: description || '',
-      // w3wlocation: w3wlocation || '',
-      // citedIdeas: citedIdeas || [],
-    },
-    // validationSchema: ideaSchema,
-    onSubmit: async (values) => {
-      if (!captchaToken) {
-        toast.error('Please verify you are human');
-        return;
-      }
+  // Ensure we only render the Recaptcha on the client and after a small delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowRecaptcha(true);
+    }, 500); // Small delay to ensure the DOM is stable
 
-      // const response = await fetch('/api/verify-captcha', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token: captchaToken }),
-      // });
+    return () => clearTimeout(timer);
+  }, []);
 
-      // const result = await response.json();
-
-      // if (!response.ok) {
-      //   toast.error('CAPTCHA verification failed. Please try again.');
-      //   recaptchaRef.current?.reset();
-      //   setCaptchaToken(null);
-      //   return;
-      // }
-
-      dispatch(setTitle(values.title));
-      dispatch(setDescription(values.description));
-      // dispatch(setW3wLocation(values.w3wlocation));
-      // dispatch(setCitedIdeas(values.citedIdeas));
-      // if (user) {
-      //   setShowVerificationDialog(true);
-      // } else {
-      //   router.push('/login?from=form');
-      // }
-      router.push('/challenges');
-
-      // recaptchaRef.current?.reset();
-      // setCaptchaToken(null);
-    },
-  });
-
-  const handleVerify = () => {
-    console.log('Verifying...');
-    setShowVerificationDialog(false);
-  };
-
-  const handlePay = () => {
-    setShowVerificationDialog(false);
-    router.push('/payment');
+  const handleStartChallenge = () => {
+    router.push('/challenges');
   };
 
   const handleCaptchaChange = (token: string | null) => {
@@ -96,99 +38,66 @@ const page = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
+      {/* Background watermark */}
+      <BrandWatermark opacity={0.04} size="70vh" blur={2} offsetY={20} />
+
       <div className="flex justify-between items-center gap-2 flex-wrap">
-        <UsernameMenu />
+        <div className="flex items-center gap-3">
+          <LogoWithText size="sm" />
+          <div className="h-6 border-l border-gray-300 mx-1"></div>
+          <UsernameMenu />
+        </div>
         <div>
           <CarbonCount />
         </div>
       </div>
       <div className="flex grow items-center justify-center">
-        <form onSubmit={formik.handleSubmit} className="w-full max-w-lg">
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle className="text-xl mb-2 flex items-center gap-2 justify-between">
-                <div>Create New Idea</div>
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    dispatch(resetForm());
-                    formik.resetForm({
-                      values: {
-                        title: '',
-                        description: '',
-                      },
-                    });
-                  }}
-                >
-                  <FaRedo />
-                </Button>
+        <div className="w-full max-w-lg">
+          <Card className="w-full border-2 border-gray-200 shadow-lg">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-3xl font-bold text-gray-800">
+                Do you want 100,000 points?
               </CardTitle>
-              <CardDescription>Fill in the details of your new idea</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" placeholder="Title" {...formik.getFieldProps('title')} className={`${formik.touched.title && formik.errors.title ? 'border-red-500' : ''}`} />
-                <div className="h-4">{formik.touched.title && formik.errors.title && <p className="text-red-500 text-xs">{String(formik.errors.title)}</p>}</div>
+            <CardContent className="space-y-6 pt-4">
+              <div className="text-center text-lg text-gray-600">
+                <p>Start creating your idea and earn up to 100,000 points!</p>
+                <p className="mt-2 text-sm text-gray-500">We'll ask for details about your idea later.</p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Description" {...formik.getFieldProps('description')} className={`${formik.touched.description && formik.errors.description ? 'border-red-500' : ''} h-20`} />
-                <div className="h-4">{formik.touched.description && formik.errors.description && <p className="text-red-500 text-xs">{String(formik.errors.description)}</p>}</div>
+              <div className="flex justify-center mt-8">
+                {showRecaptcha ? (
+                  <Recaptcha
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                    onChange={handleCaptchaChange}
+                    onExpired={() => setCaptchaToken(null)}
+                  />
+                ) : (
+                  <div className="h-[78px] flex items-center justify-center text-sm text-gray-500">
+                    Loading reCAPTCHA...
+                  </div>
+                )}
               </div>
 
-              {/* <div className="space-y-2">
-                <Label htmlFor="w3wlocation">W3W Location</Label>
-                <Input id="w3wlocation" placeholder="W3W Location" {...formik.getFieldProps('w3wlocation')} className={`${formik.touched.w3wlocation && formik.errors.w3wlocation ? 'border-red-500' : ''}`} />
-                <div className="h-4">{formik.touched.w3wlocation && formik.errors.w3wlocation && <p className="text-red-500 text-xs">{String(formik.errors.w3wlocation)}</p>}</div>
-              </div> */}
-
-              {/* <div className="space-y-2">
-                <Label>Cite idea</Label>
-                <Select
-                  value={formik.values.citedIdeas[0] || 'none'}
-                  onValueChange={(value) => {
-                    if (value === 'none') {
-                      formik.setFieldValue('citedIdeas', []);
-                    } else {
-                      formik.setFieldValue('citedIdeas', [value]);
-                    }
-                  }}
+              <div className="flex justify-center">
+                <Button
+                  onClick={handleStartChallenge}
+                  className="bg-gray-800 hover:bg-gray-900 text-white text-lg py-6 px-8 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3"
+                  disabled={!captchaToken}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select idea to be cited" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="idea1">Idea 1</SelectItem>
-                    <SelectItem value="idea2">Idea 2</SelectItem>
-                    <SelectItem value="idea3">Idea 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div> */}
+                  Start Now <FaArrowRight />
+                </Button>
+              </div>
+
+              <div className="text-center text-xs text-gray-400 mt-4">
+                Complete all challenges to maximize your score!
+              </div>
             </CardContent>
           </Card>
-          <div className="flex justify-end mt-3.5">
-            <RecaptchaComponent
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
-              onChange={handleCaptchaChange}
-              onExpired={() => setCaptchaToken(null)}
-            />
-            <Button
-              type="submit"
-              className="bg-gray-500 hover:bg-gray-900 text-white ml-4"
-            // disabled={formik.isSubmitting}
-            >
-              Next
-            </Button>
-          </div>
-        </form>
+        </div>
       </div>
-      <VerificationDialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog} onVerify={handleVerify} onPay={handlePay} />
     </div>
   );
 };
 
-export default page;
+export default Page;

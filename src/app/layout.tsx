@@ -35,7 +35,6 @@ export default function RootLayout({
           <AuthProvider>
             <MarkProvider initialVariant="background" initialThreshold={10}>
               <CarbonWrapper>
-                <BackgroundMark />
                 <Toaster position="top-right" />
                 {children}
               </CarbonWrapper>

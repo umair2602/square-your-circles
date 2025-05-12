@@ -48,6 +48,7 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
   const recaptchaRef = useRef<any>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+  const [textError, setTextError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.isIdVerified && challenge.type === 'verify') {
@@ -179,6 +180,34 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
     return option.score;
   };
 
+  // Validate text input
+  const validateTextInput = (value: string) => {
+    if (challenge.validation?.required && !value) {
+      setTextError(challenge.validation.errorMessage || 'This field is required');
+      return false;
+    }
+
+    if (challenge.validation?.pattern && value) {
+      const regex = new RegExp(challenge.validation.pattern);
+      if (!regex.test(value)) {
+        setTextError(challenge.validation.errorMessage || 'Invalid format');
+        return false;
+      }
+    }
+
+    setTextError(null);
+    return true;
+  };
+
+  // Handle text input change
+  const handleTextChange = (value: string) => {
+    onChange(value);
+    // Clear error on typing
+    if (textError) {
+      validateTextInput(value);
+    }
+  };
+
   return (
     <div className="">
       <Label className="block text-md font-medium mb-3">{challenge.challenge}</Label>
@@ -225,7 +254,7 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
                         }`}
                     >
                       {scoreChange > 0 ? `+${scoreChange.toLocaleString()}` :
-                        scoreChange < 0 ? scoreChange.toLocaleString() :
+                        scoreChange === 0 ? '0' :
                           '0'} points
                     </motion.div>
                   )}
@@ -236,7 +265,18 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
         </div>
       )}
 
-      {challenge.type === 'text' && <Input placeholder={challenge.placeholder || 'Type here...'} value={response} onChange={(e) => onChange(e.target.value)} />}
+      {challenge.type === 'text' && (
+        <div className="space-y-2">
+          <Input
+            placeholder={challenge.placeholder || 'Type here...'}
+            value={response}
+            onChange={(e) => handleTextChange(e.target.value)}
+            onBlur={() => validateTextInput(response)}
+            className={`${textError ? 'border-red-500' : ''}`}
+          />
+          {textError && <p className="text-red-500 text-xs">{textError}</p>}
+        </div>
+      )}
 
       {challenge.type === 'verify' && (
         <div className="space-y-4">
