@@ -15,9 +15,9 @@ export default function LogoWithText({
 }: LogoWithTextProps) {
     // Size configs
     const sizeConfig = {
-        sm: { logoSize: 26, textSize: 'text-lg' },
-        md: { logoSize: 34, textSize: 'text-xl' },
-        lg: { logoSize: 42, textSize: 'text-2xl' },
+        sm: { logoSize: 36, textSize: 'text-lg' },
+        md: { logoSize: 44, textSize: 'text-xl' },
+        lg: { logoSize: 52, textSize: 'text-2xl' },
     };
 
     const { logoSize, textSize } = sizeConfig[size];
