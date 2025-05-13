@@ -1,3 +1,4 @@
+'use client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -13,8 +14,29 @@ import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import PaymentDialog from '../dialogs/payment-dialog';
 
-// Dynamic import with no SSR
-const RecaptchaComponent = dynamic(() => import('@/components/common/Recaptcha'), { ssr: false });
+// Dynamic import with proper no SSR settings
+const RecaptchaComponent = dynamic(
+  () => import('@/components/common/Recaptcha').then(mod => mod.default),
+  {
+    ssr: false,
+    loading: () => <div className="flex justify-center p-4 border rounded-md">Loading verification...</div>
+  }
+);
+
+// Client-side only wrapper component for verification sections
+const ClientOnlyVerification = ({ children }: { children: React.ReactNode }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="h-16 bg-gray-100 animate-pulse rounded-md"></div>;
+  }
+
+  return <>{children}</>;
+};
 
 type Challenge = {
   id: string;
@@ -48,6 +70,11 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
   const [textError, setTextError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (user?.isIdVerified && challenge.type === 'verify') {
@@ -83,14 +110,19 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       return;
     }
 
-    if (!captchaToken) {
+    console.log('captchaToken', captchaToken);
+    console.log('response', response);
+    // Only check for captcha if it's not already verified
+    if (!captchaToken && response !== 'verified') {
       toast.error('Please verify you are human');
       return;
     }
 
     // Reset captcha after use
-    recaptchaRef.current?.reset();
-    setCaptchaToken(null);
+    if (recaptchaRef.current) {
+      recaptchaRef.current?.reset();
+      setCaptchaToken(null);
+    }
 
     if (!currentPpm) {
       toast.error('Please refresh or wait for the ppm value to be displayed');
@@ -202,11 +234,49 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
   // Handle text input change
   const handleTextChange = (value: string) => {
     onChange(value);
+
+    // Log for debugging title and description inputs
+    if (challenge.id === 'time_1' || challenge.id === 'time_2') {
+      console.log(`Setting ${challenge.id}:`, value);
+    }
+
     // Clear error on typing
     if (textError) {
       validateTextInput(value);
     }
   };
+
+  // Handle title and description fields special cases
+  if (challenge.id === 'time_1' || challenge.id === 'time_2') {
+    return (
+      <div className="">
+        <Label className="block text-md font-medium mb-3">{challenge.challenge}</Label>
+        <div className="space-y-2">
+          <Input
+            placeholder={challenge.placeholder || 'Type here...'}
+            value={response}
+            onChange={(e) => handleTextChange(e.target.value)}
+            onBlur={() => validateTextInput(response)}
+            className={`${textError ? 'border-red-500' : ''}`}
+          />
+          {textError && <p className="text-red-500 text-xs">{textError}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // If this is a points text header, display it differently
+  if (challenge.id === 'geo_0') {
+    return (
+      <div className="mb-6">
+        <h3 className="text-xl font-bold text-center text-grey-600">{challenge.challenge}</h3>
+      </div>
+    );
+  }
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="">
@@ -263,7 +333,7 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
         </div>
       )}
 
-      {challenge.type === 'text' && (
+      {challenge.type === 'text' && challenge.id !== 'geo_0' && (
         <div className="space-y-2">
           <Input
             placeholder={challenge.placeholder || 'Type here...'}
@@ -277,20 +347,26 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       )}
 
       {challenge.type === 'verify' && (
-        <div className="space-y-4">
-          {!user?.isIdVerified && (
-            <div className="flex justify-center">
-              <RecaptchaComponent
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
-                onChange={handleCaptchaChange}
-                onExpired={() => setCaptchaToken(null)}
-              />
-            </div>
-          )}
-          <Button onClick={verifyYoti} className="w-full" disabled={user?.isIdVerified}>
-            {user?.isIdVerified ? 'Already Verified' : 'Verify with Yoti'}
-          </Button>
-        </div>
+        <ClientOnlyVerification>
+          <div className="space-y-4">
+            {!user?.isIdVerified && response !== 'verified' && (
+              <div className="flex justify-center">
+                <RecaptchaComponent
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
+                  onChange={handleCaptchaChange}
+                  onExpired={() => setCaptchaToken(null)}
+                />
+              </div>
+            )}
+            <Button
+              onClick={verifyYoti}
+              className="w-full"
+              disabled={user?.isIdVerified || response === 'verified'}
+            >
+              {user?.isIdVerified || response === 'verified' ? 'Already Verified' : 'Verify with Yoti'}
+            </Button>
+          </div>
+        </ClientOnlyVerification>
       )}
 
       {challenge.type === 'declaration' && (
@@ -300,19 +376,23 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       )}
 
       {challenge.type === 'register' && (
-        <div className="space-y-4">
-          <div className="flex justify-center">
-            <RecaptchaComponent
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
-              onChange={handleCaptchaChange}
-              onExpired={() => setCaptchaToken(null)}
-            />
+        <ClientOnlyVerification>
+          <div className="space-y-4">
+            {response !== 'verified' && (
+              <div className="flex justify-center">
+                <RecaptchaComponent
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY || ''}
+                  onChange={handleCaptchaChange}
+                  onExpired={() => setCaptchaToken(null)}
+                />
+              </div>
+            )}
+            <Button onClick={handleRegisterScore} disabled={loading} className="w-full">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? 'Registering...' : 'Register Score'}
+            </Button>
           </div>
-          <Button onClick={handleRegisterScore} disabled={loading} className="w-full">
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? 'Registering...' : 'Register Score'}
-          </Button>
-        </div>
+        </ClientOnlyVerification>
       )}
 
       {challenge.type === 'checkbox' && (

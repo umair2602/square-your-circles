@@ -128,12 +128,10 @@ const categoryChallenges = {
   ],
   Geography: [
     {
-      id: 'cust_2',
-      challenge: 'Do you want 10,000 points?',
-      type: 'mcq',
-      options: [
-        { label: 'You have shown your idea to some presumed stakeholders and turned them into Re:designers by changing your offer of service based on their views.', value: 'op_2', score: 10000 },
-      ],
+      id: 'geo_0',
+      challenge: 'Do you want 100,000 points?',
+      type: 'text',
+      placeholder: '',
     },
     {
       id: 'geo_1',
@@ -265,6 +263,14 @@ const page = () => {
       const scoreDifference = newPoints - previousPoints;
       dispatch(setScore(score + scoreDifference));
     }
+
+    // Immediately update title and description if those fields change
+    if (id === 'time_1') {
+      dispatch(setTitle(value));
+    }
+    if (id === 'time_2') {
+      dispatch(setDescription(value));
+    }
   };
 
   const handleGeographyScore = () => {
@@ -294,8 +300,27 @@ const page = () => {
   };
 
   const handleTimeSubmission = () => {
+    // Update title and description to store if they exist in responses
+    if (responses['time_1']) {
+      dispatch(setTitle(responses['time_1']));
+    }
+
+    if (responses['time_2']) {
+      dispatch(setDescription(responses['time_2']));
+    }
+
+    if (responses['time_3'] === 'registered') {
+      // Final submission logic here
+      console.log('Final Score:', score);
+      console.log('Title:', title);
+      console.log('Description:', description);
+      // You can add API call here to save the score
+    }
+  };
+
+  const next = () => {
+    // Update title and description state immediately if in Time step
     if (originalCategory === 'Time') {
-      // Save title and description to store
       if (responses['time_1']) {
         dispatch(setTitle(responses['time_1']));
       }
@@ -303,16 +328,8 @@ const page = () => {
       if (responses['time_2']) {
         dispatch(setDescription(responses['time_2']));
       }
-
-      if (responses['time_3'] === 'registered') {
-        // Final submission logic here
-        console.log('Final Score:', score);
-        // You can add API call here to save the score
-      }
     }
-  };
 
-  const next = () => {
     // Check if there are any validation errors before proceeding
     const isValidationPass = validateCurrentStep();
     if (!isValidationPass) {
@@ -343,13 +360,28 @@ const page = () => {
       if (!titleField && currentChallenges.find(c => c.id === 'time_1')?.validation?.required) {
         toast.error('Please provide a title for your idea');
         isValid = false;
+      } else if (titleField) {
+        // Make sure title is updated in the store
+        dispatch(setTitle(titleField));
       }
 
       // Check if description is filled
       if (!descriptionField && currentChallenges.find(c => c.id === 'time_2')?.validation?.required) {
         toast.error('Please provide a description for your idea');
         isValid = false;
+      } else if (descriptionField) {
+        // Make sure description is updated in the store
+        dispatch(setDescription(descriptionField));
       }
+
+      // Log current state for debugging
+      console.log('Validating time fields:', {
+        responses,
+        storeTitle: title,
+        storeDescription: description,
+        responseTitle: responses['time_1'],
+        responseDescription: responses['time_2']
+      });
 
       return isValid;
     }
@@ -389,7 +421,7 @@ const page = () => {
     } else if (currentCategory === 'Time') {
       handleTimeSubmission();
     }
-    
+
     dispatch(setCurrentStep(newStep));
   };
 
