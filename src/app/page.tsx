@@ -337,8 +337,8 @@ export default function Home() {
               {formattedPpm.split('').map((digit, index) => (
                 <AnimatedDigit key={index} value={digit} index={index} />
               ))}
+              <div className="text-base sm:text-lg md:text-xl text-gray-600 font-medium mt-2">parts per million</div>
             </div>
-            <div className="text-xl sm:text-2xl text-gray-600 font-medium mb-16 sm:mb-20">parts per million</div>
 
             <div className="mt-8 max-w-md mx-auto">
               <TopLeaderboard />

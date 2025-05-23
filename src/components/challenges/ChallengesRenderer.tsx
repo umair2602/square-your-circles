@@ -110,8 +110,6 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       return;
     }
 
-    console.log('captchaToken', captchaToken);
-    console.log('response', response);
     // Only check for captcha if it's not already verified
     if (!captchaToken && response !== 'verified') {
       toast.error('Please verify you are human');
@@ -133,6 +131,9 @@ export function ChallengesRenderer({ challenge, response, onChange }: Props) {
       toast.error('Please provide the title of your idea');
       return;
     }
+
+    // Update the response to verified before proceeding
+    onChange('verified');
 
     // Proceed with registration
     try {
