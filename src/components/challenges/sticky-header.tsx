@@ -53,18 +53,6 @@ export function StickyHeader() {
                             >
                                 {score?.toLocaleString() || 0}
                             </motion.span>
-
-                            {showScoreChange && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 0 }}
-                                    animate={{ opacity: 1, y: -20 }}
-                                    exit={{ opacity: 0 }}
-                                    className={`absolute -top-1 -right-2 text-sm font-semibold ${scoreChange > 0 ? 'text-gray-900' : 'text-gray-700'
-                                        }`}
-                                >
-                                    {scoreChange > 0 ? `+${scoreChange.toLocaleString()}` : scoreChange.toLocaleString()}
-                                </motion.div>
-                            )}
                         </div>
                     </div>
                     <LeaderboardPosition variant="Position" />
